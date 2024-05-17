@@ -1,0 +1,10 @@
+^C:\USERS\AJMR1\DOCUMENTS\VCWORK\BUILD\CMAKEFILES\F1A24D6EB7DB29FFDE9094A0FE959E4F\GENERATE.STAMP.RULE
+setlocal
+C:\CMake\bin\cmake.exe -SC:/Users/ajmr1/Documents/VCWORK -BC:/Users/ajmr1/Documents/VCWORK/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/ajmr1/Documents/VCWORK/build/VCWORK.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,3 @@
+C:/Users/ajmr1/Documents/VCWORK/build/CMakeFiles/VCWORK.dir
+C:/Users/ajmr1/Documents/VCWORK/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/ajmr1/Documents/VCWORK/build/CMakeFiles/ZERO_CHECK.dir
