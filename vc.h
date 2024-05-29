@@ -48,10 +48,16 @@ void bit_to_unsigned_char(unsigned char *databit, unsigned char *datauchar, int 
 long int unsigned_char_to_bit(unsigned char *datauchar, unsigned char *databit, int width, int height);
 char *netpbm_get_token(FILE *file, char *tok, int len);
 
+// FUNCOES DE INVERSAO
+int vc_gray_negative(IVC *src, IVC *dst);
+int vc_rgb_negative(IVC *src, IVC *dst);
+
 // FUNÇOES CONVERSAO
-int vc_rgb_get_red_gray(IVC *srcdst);
+int vc_rgb_get_red_gray(IVC *src, IVC *dst);
+int vc_rgb_get_green_gray(IVC *src, IVC *dst);
 int vc_rgb_to_gray(IVC *src, IVC *dst);
 int vc_rgb_to_hsv(IVC *srcdst);
+int vc_rgb_to_hsv2 (IVC *src, IVC *dst);
 
 // SEGMENTACAO
 int vc_hsv_segmentation(IVC *srcdst, int hmin, int hmax, int smin, int smax, int vmin, int vmax);
@@ -76,19 +82,23 @@ int vc_gray_erode(IVC *src, IVC *dst, int kernel);
 int vc_gray_close(IVC *src, IVC *dst, int kernelE, int kernelD);
 int vc_gray_open(IVC *src, IVC *dst, int kernelE, int kernelD);
 
-
 // ETIQUETAGEM
-
 int vc_binary_blob_info(IVC *src, OVC *blobs, int nblobs);
 OVC* vc_binary_blob_labelling(IVC *src, IVC *dst, int *nlabels);
 int vc_labeled_to_grey(IVC* imageA_labelled, IVC* imageA_label_grey, int nlabels, int width, int height);
 
 // HISTOGRAM
-
 int vc_gray_histogram_show(IVC *src, IVC *dst);
 int vc_gray_histogram_equalization(IVC *src, IVC *dst);
 
 // DETEÇÃO DE CONTORNOS
 int vc_grey_edge_prewitt(IVC *image_original, IVC *barbara_contornos, float th);
+
+// FILTROS DOMINIO ESPACIAL
+int vc_gray_lowpass_mean_filter(IVC *src, IVC *dst, int kernel );
+int vc_gray_lowpass_median_filter(IVC *src, IVC *dst, int kernel);
+int vc_gray_lowpass_gaussian_filter(IVC *src, IVC *dst);
+int vc_gray_highpass_filter(IVC *src, IVC *dst);
+int vc_gray_highpass_filter_enhance(IVC *src, IVC *dst, int gain);
 
 #endif

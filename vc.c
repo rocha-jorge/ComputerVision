@@ -16,8 +16,207 @@
 #include <malloc.h>
 #include <math.h>
 #include "vc.h"
-
 #define MY_MAX(a, b ) (a > b ? a : b)
+
+// gain = 2 (prof)
+
+// datadst = datasrc + sum/16 * gain
+
+// max ( datadst = datasrc + sum/16 * gain ; 0) para nao ter negativos
+// min ( max ( datadst = datasrc + sum/16 * gain ; 0) ; 255) para nao passar de 255
+
+int vc_gray_highpass_filter_enhance(IVC *src, IVC *dst, int gain){
+
+
+}
+
+
+// usar a matriz da do 8
+// no final de calcular o valor da matriz, fazer absoluto dele para nao ter negativos
+// multiplicar pelo 1/9
+
+int vc_gray_highpass_filter(IVC *src, IVC *dst){
+
+
+}
+
+int vc_gray_lowpass_gaussian_filter(IVC *src, IVC *dst){
+
+	// gauss média (0,0) e σ=1
+	int gauss[5][5] = {
+				//kx
+	//ky
+		{1,  4,  7,  4, 1},
+		{4, 16, 26, 16, 4},
+		{7, 26, 41, 26, 7},
+		{4, 16, 26, 16, 4},
+		{1,  4,  7,  4, 1}
+	};
+
+	// atribuir valores a variáveis
+	int height = src->height;
+	int width = src->width;	
+	int bytesperline = src->bytesperline;
+	int offset = 2; // ajustar conforme necessário
+
+	// percorrer todos os pixeis
+	for (int y=0; y<height; y++){
+		for (int x=0; x<width; x++){
+
+			// para cada pixel
+			int pos = x + y* bytesperline; // pixel em analise
+			int somatorio = 0;			   // total para depois dividir por 273
+
+			// eixos da matriz
+			int ky =0, kx = 0;
+
+			// para cada ponto da matriz
+			for (ky - offset ; ky<=offset; ky++){		// neste caso faz 5 linhas
+				for (kx - offset; kx<=offset; kx++){	// neste caso faz 5 colunas
+					
+					// ponto actual da matriz
+					int posk = (x+kx) + (y+ky) * bytesperline;
+					
+					// se o ponto actual estiver dentro os limites da imagem
+					if (y-ky>=0 && y+ky<height && x-kx>=0 && x+kx<=width){
+
+						somatorio = somatorio + src->data[posk] * gauss[ky+2][kx+2];  // multiplica o valor do pixel da matriz pelo seu peso
+						// OPÇAO : divisor = divisor + gauss[ky+2][kx+2]
+					}
+				}
+			}
+			
+			// dividir o somatório de (valor*peso) pelo total (273)
+			dst->data[pos] = somatorio / 273; // OPÇAO: somatorio / divisor
+		}
+	}
+return 1;
+}
+
+int vc_gray_lowpass_median_filter(IVC *src, IVC *dst, int kernel){
+
+	int width = src->width;
+    int height = src->height;
+    int channels = src->channels;
+    int levels = src->levels;
+	int bytesperline = src->bytesperline;
+
+	int offset = (kernel-1)/2;
+	int matrixSize = kernel * kernel;
+
+	int pos = 0;
+	int validos = 0;
+	int mediana = 0;
+	int posicao1 = 0;
+	int posicao2 = 0;
+
+	int valores[matrixSize];
+	for ( int i = 0; i<matrixSize; i++){
+		valores[i]=0;
+	}
+
+	for ( int y=0; y<height; y++){  	//linhas
+		for (int x=0; x < width; x++){	//colunas
+
+			pos = y * bytesperline + x * channels;  // pixel em análise
+
+			// inicializar array
+			for ( int i = 0; i<matrixSize; i++){
+				valores[i]=0;
+			}
+
+			// colectar valores da máscara para um array, se estiverem dentro de limites válidos
+			int kx = 0;
+			int ky = 0;
+			int posk = 0;
+			
+			int indice_array = 0;
+
+			for (ky=-offset; ky<=offset; ky++){
+				for (kx=-offset; kx<=offset; kx++){
+
+					if((y+ky >= 0)&&(y+ky <height)&&(x+kx >= 0)&&(x+kx <width)){
+
+						posk = (y+ky) * bytesperline + (x+kx) * channels;
+						valores[indice_array] = src->data[posk];
+						indice_array++ ;
+					}
+				}
+			}
+
+			// bubble sort
+			int temp;
+			for (int i=0; i < matrixSize - 1 ; i++){		// faz iterações igual ao tamanho do array -1 (chega para garantir ordenação). em cada uma fica mais um numero bubbled no final
+				for (int j=0; j<matrixSize - i -1 ; j++){	// Em cada iteração percorre todas as posições que ainda não foram "bubbled" nas anteriores
+					if (valores[j]<valores[j+1]){			// e escolhe a maior/menor de todas para colar na posição actual i
+						temp = valores[j];
+						valores[j] = valores[j+1];
+						valores[j+1]=temp;
+					}
+				}
+			}
+
+			// encontrar mediana
+			posicao1 = indice_array/2;
+			posicao2 = posicao1 +1;
+
+    		if (indice_array % 2 == 0) {			// se for par
+				mediana = (valores[posicao1] + valores[posicao2])/2;
+			}
+			else if (indice_array % 2 != 0) {		// se for impar
+				mediana = valores[posicao2];   // ex: 5 valores, 5/2 = 2,5 , posicao1=2 posicao2=3
+			}
+
+			// atribuir valor ao pixel em análise na imagem de output
+			dst->data[pos]=mediana;
+		}
+	}
+return 1;	
+}
+
+int vc_gray_lowpass_mean_filter(IVC *src, IVC *dst, int kernelsize){
+
+	int width = src->width;
+    int height = src->height;
+    int channels = src->channels;
+    int levels = src->levels;
+	int bytesperline = src->bytesperline;
+
+	int offset = (kernelsize-1)/2;
+
+	int pos = 0;
+	int soma = 0;
+	int validos = 0;
+	float media = 0;
+
+	for ( int y=0; y<height; y++){  	//linhas
+		for (int x=0; x < width; x++){	//colunas
+
+			pos = y * bytesperline + x * channels;
+			int kx = 0;
+			int ky = 0;
+			int posk = 0;
+			media = 0; 		// reset
+			soma = 0; 		// reset
+			validos = 0; 	// reset
+
+			for (ky=-offset; ky<=offset; ky++){
+				for (kx=-offset; kx<=offset; kx++){
+
+					if((y+ky >= 0)&&(y+ky <height)&&(x+kx >= 0)&&(x+kx <width)){
+
+						posk = (y+ky) * bytesperline + (x+kx) * channels;
+						soma = soma + src->data[posk];
+						validos++;
+					}
+				}
+			}
+			media = (float)soma / (float)validos;
+			dst->data[pos] = media;
+		}
+	}
+return 1;	
+}
 
 int vc_grey_edge_prewitt(IVC *src, IVC *dst, float th){
 	int width = src->width;
@@ -523,7 +722,6 @@ OVC* vc_binary_blob_labelling(IVC *src, IVC *dst, int *nlabels){
 	return blobs;
 }
 
-
 int vc_binary_blob_info(IVC *src, OVC *blobs, int nblobs)
 {
 	unsigned char *data = (unsigned char *)src->data;
@@ -593,15 +791,12 @@ int vc_binary_blob_info(IVC *src, OVC *blobs, int nblobs)
 		// Centro de Gravidade
 		//blobs[i].xc = (xmax - xmin) / 2;
 		//blobs[i].yc = (ymax - ymin) / 2;
-		blobs[i].xc = sumx / MY_MAX(blobs[i].area, 1);
-		blobs[i].yc = sumy / MY_MAX(blobs[i].area, 1);
+		blobs[i].xc = sumx / MAX(blobs[i].area, 1);
+		blobs[i].yc = sumy / MAX(blobs[i].area, 1);
 	}
 
 	return 1;
 }
-
-
-#pragma region grey  // ##################################################
 
 int vc_gray_open(IVC *src, IVC *dst, int kernelE, int kernelD){
     // precisamos de criar uma imagem temporária para poder passar 
@@ -729,10 +924,6 @@ int vc_gray_dilate(IVC *src, IVC *dst, int kernel){
         return 1;
 }
 
-#pragma endregion // GREY ##################################################
-
-#pragma region binary // ##################################################
-
 int vc_binary_close(IVC *src, IVC *dst, int kernelE, int kernelD){
 
     IVC *temp = vc_image_new(dst->width, dst->height, dst->channels, dst->levels);
@@ -760,7 +951,6 @@ int vc_binary_open(IVC *src, IVC *dst, int kernelE, int kernelD){
 
     return 1;
 }
-
 
 int vc_binary_erode(IVC* src, IVC* dst, int kernel){
 
@@ -1154,7 +1344,6 @@ int vc_gray_to_binary_midpoint(IVC *src, IVC *dst, int kernel)
 	return 1;
 }
 
-
 float vc_gray_to_binary_global_mean(IVC *srcdst){
 	unsigned char *data = (unsigned char *) srcdst->data;
 	int width = srcdst->width;
@@ -1187,8 +1376,6 @@ float vc_gray_to_binary_global_mean(IVC *srcdst){
 
 }
 
-#pragma endregion // BINARY ##################################################
-
 int vc_gray_to_binary(IVC *srcdst, IVC *dst, int threshold)
 {
     unsigned char *data = (unsigned char *)srcdst->data;
@@ -1216,13 +1403,13 @@ int vc_gray_to_binary(IVC *srcdst, IVC *dst, int threshold)
     return 1;
 }
 
-
 int vc_scale_gray_to_rgb(IVC *src, IVC *dst){
 
 	int bytesperline_dst = dst->bytesperline;
 	int channels_dst = dst->channels;
 	int width = src -> width;
 	int height = src -> height;
+	int size_src = src->width * src->height * src->channels;
 	int d,i;
 	long int pos_src, pos_dst;
 	unsigned char red[256], green[256], blue[256];
@@ -1258,11 +1445,19 @@ int vc_scale_gray_to_rgb(IVC *src, IVC *dst){
 
 	// Yellow to Red
 	for (d=255, i=192; i<256; i++, d -=4){
+		red[i]=255;
+		green[i]= d;
+		blue[i]= 0;
+	}
 
-		// implementacao
+	// percorrer os arrays red, green e blue e atribuir o valor consoante a intensidade do gray
 
-	}	
-
+	int d = 0;
+	for (int i = 0; i < size_src; d += 3, i++) {  // d é a posicao na imagem de destino
+		dst->data[d]   = red[src->data[i]];
+		dst->data[d+1] = green[src->data[i]];
+		dst->data[d+2] = blue[src->data[i]];
+	}
 }
 
 int countWhitePixels(IVC *srcdst){
@@ -1317,6 +1512,32 @@ int vc_hsv_segmentation_output(IVC *srcdst, IVC *outputdst, int hmin, int hmax, 
 	return 1;
 }
 
+int vc_hsv_segmentation2(IVC *src, IVC *dst, int hmin, int hmax, int smin, int smax , int vmin, int vmax){
+
+	int width = src->width;
+	int height = src->height;
+	int channels = src->channels;
+	int size = width * channels * height;
+	float h, s, v = 0;
+	int posdst = 0;
+
+	for (int i=0 ; i<size; i=i+channels){
+
+			h = (float)src->data[i] * 255 / 360 ;
+			s = (float)src->data[i+1] * 255 / 360 ;
+			v = (float)src->data[i+2] * 255 / 360 ;
+
+			if( h > hmin && h < hmax     &&    s > smin && s < smax     && v < vmin && v > vmax){
+				dst->data[posdst] = 255;
+			}
+			else{
+				dst->data[posdst] = 0;
+			}
+			posdst++ ;
+	}
+	return 1;
+}
+
 int vc_hsv_segmentation(IVC *srcdst, int hmin, int hmax, int smin, int smax, int vmin, int vmax)  /*falta alguma coisa*/{
 
 	unsigned char *data = (unsigned char *)srcdst->data;
@@ -1349,12 +1570,65 @@ int vc_hsv_segmentation(IVC *srcdst, int hmin, int hmax, int smin, int smax, int
 			data[i+2] = 0;
 		}
 	}
-
 	return 1;
 }
 
+int vc_rgb_to_hsv2 (IVC *src, IVC *dst){
 
-// convert image from RGB to HSV
+	// H-hue  V-Value S-Saturation  Value = max()  Saturation = min()
+
+	int width = src->width;
+	int height = src->height;
+	int channels = src->channels;
+	int bytesperline = src->bytesperline;
+	int size = width * channels * height;
+
+	float min, max, value;
+	float saturation, hue;
+	float red, blue, green;
+
+	for ( int i=0 ; i<size ; i=i+channels){				  
+		
+		red = 	src->data[i];
+		blue = 	src->data[i+1];
+		green = src->data[i+2];
+
+		max = (red > green ? ( red > blue ? red : blue ) : ( green > blue ? green : blue));
+		min = (red < green ? ( red < blue ? red : blue ) : ( green < blue ? green : blue));
+
+		value = max;
+		
+		if ( value == 0.0f){   // precaver contra divisão por zero
+			hue = 0.0f ;
+			saturation = 0.0f;
+		}
+		else{    // precaver contra saturaçao = 0
+			saturation = ( max - min) / value * 255.0f ; // saturation é entre 0 e 1 mas nós queremos entre 0 e 255
+
+			if(saturation == 0.0f){
+				hue = 0.0f;
+			}
+			else if	( max == red && green >= blue ){  	// if RED>BLUE && GREEN>BLUE
+				hue = 60.0f * ( green - blue )  / (max-min);		// (60 * G-B) / (max-min)	
+			}
+			else if ( max == red && blue > green){
+				hue = 360.0f + 60.0f * ( green - blue ) / (max-min);
+			}
+			else if ( max == green){
+				hue = 120.0f + 60.0f * ( blue - red ) / (max-min);
+			}
+			else hue = 240.0f + 60.0f * ( red - green) / (max-min);
+			
+			hue = hue / 360.0f * 255.0f ; // converter de 0 a 360 para 0 a 255
+		}
+
+		dst->data[i]= (unsigned char)hue;
+		dst->data[i+1] = (unsigned char)saturation;
+		dst->data[i+2] = (unsigned char)value;
+	}
+	return 1 ;
+}
+
 int vc_rgb_to_hsv(IVC *srcdst)
 {
     unsigned char *data = (unsigned char *)srcdst->data;
@@ -1365,7 +1639,6 @@ int vc_rgb_to_hsv(IVC *srcdst)
     float r,g,b,hue,saturation,value;
     float rgb_max, rgb_min;
     int i,size;
-
 
     // verificacao de rros
     if ((width <= 0) || (height <= 0) || (data == NULL)) return 0;
@@ -1387,7 +1660,7 @@ int vc_rgb_to_hsv(IVC *srcdst)
 
         value = rgb_max; // calculate value parameter for that pixel
         
-        if (value == 0.0f){  //handle exception case
+        if(value == 0.0f){  //handle exception case
             hue = 0.0f;
             saturation =0.0f;
         }
@@ -1422,10 +1695,8 @@ int vc_rgb_to_hsv(IVC *srcdst)
         data[i + 2] = (unsigned char)(value);
         
     }
-
 	return 0;
 }
-
 
 int vc_rgb_to_gray(IVC *src, IVC *dst){
 	unsigned char *datasrc = (unsigned char *) src->data;
@@ -1442,7 +1713,7 @@ int vc_rgb_to_gray(IVC *src, IVC *dst){
 
 	//verificação de erros
 	if(( src->width <= 0) || (src->height <= 0) || (src->data == NULL)) return 0;
-	if(( src-width != dst->width) || (src->height != dst->height)) return 0;
+	if(( src->width != dst->width) || (src->height != dst->height)) return 0;
 	if(( src->channels != 3) || (dst->channels != 1)) return 0;
 
 	for(y=0; y<height; y++){
@@ -1455,38 +1726,83 @@ int vc_rgb_to_gray(IVC *src, IVC *dst){
 			bf = (float) datasrc[pos_src +2];
 
 			datadst[pos_dst] = (unsigned char) ((rf * 0.299) + (gf * 0.587) + (bf * 0.114));
-
 		}
 	}
-
 	return 1;
 }
 
-// Extrair componente Red da imagem RGB para Gray
-int vc_rgb_get_red_gray(IVC *srcdst){
-	unsigned char *data = (unsigned char *) srcdst->data;
-	int width = srcdst->width;
-	int height = srcdst->height;
-	int bytesperline = srcdst->width * srcdst->channels;
-	int channels = srcdst->channels;
-	int x,y;
-	long int pos;
+int vc_rgb_get_green_gray(IVC *src, IVC *dst){
 
-	// verificação de erros
-	if((srcdst->width <=0) || (srcdst->height <=0) || (srcdst->data == NULL)) return 0;
-	if (channels !=3) return 0;
+	int width = src->width;
+	int height = src->height;
+	int channels = src->channels;
+	int bytesperline = src->bytesperline;
+
+	// Extrair a componente green
+	long int pos = 0;
+	for (int y=0; y<height; y++){
+		for (int x=0; x<width; x++){
+
+			pos = y * bytesperline + x * channels;	// ao multiplicar por 3 estou a saltar de 3 em 3, sempre no mesmo channel
+
+			dst->data[pos]		= src->data[pos+1]; //Make red equal to green
+			dst->data[pos+1]	= src->data[pos+1]; //Make green be equal to green
+			dst->data[pos+2]	= src->data[pos+1]; //Make Blue be equal to green
+		}
+	}
+	return 1;
+}
+
+int vc_rgb_get_red_gray(IVC *src, IVC *dst){
+
+	int width = src->width;
+	int height = src->height;
+	int channels = src->channels;
+	int bytesperline = src->bytesperline;
 
 	// Extrair a componente red
-	for (y=0; y<height; y++){
-		for (x=0; x<width; x++){
-			pos = y * bytesperline + x * channels;
+	long int pos = 0;
+	for (int y=0; y<height; y++){
+		for (int x=0; x<width; x++){
 
-			data[pos+1]=data[pos]; //Make green be equal to red
-			data[pos+2]=data[pos]; //Make Blue be equal to red
+			pos = y * bytesperline + x * channels;	// ao multiplicar por 3 estou a saltar de 3 em 3, sempre no mesmo channel
+
+			dst->data[pos]		= src->data[pos];
+			dst->data[pos+1]	= src->data[pos]; //Make green be equal to red
+			dst->data[pos+2]	= src->data[pos]; //Make Blue be equal to red
 		}
 	}
 	return 1;
 }
+
+int vc_rgb_negative(IVC *src, IVC *dst){
+
+	int width = src->width;
+	int height = src->height;
+	int channels = src->channels;
+
+	int size = width * height * channels; // vai apanhar posições suficientes para cobrir todos os channels de todos os pixeis
+
+	for ( int i=0 ; i< size; i++){
+		dst->data[i] = 255 - src->data[i];
+	}
+}
+
+int vc_gray_negative(IVC *src, IVC *dst){
+	
+	int width =         src->width;
+    int height =        src->height;
+    int channels =      src->channels;
+
+    int size = width * height * channels;
+
+    for (int i = 0; i<size; i++){
+		dst->data[i] = 255 - src->data[i];
+    }
+
+return 1;
+}
+
 
 #pragma region Support // ##################################################
 
@@ -1517,8 +1833,6 @@ IVC *vc_image_new(int width, int height, int channels, int levels)
 	return image;
 }
 
-
-
 // Libertar mem�ria de uma imagem
 IVC *vc_image_free(IVC *image)
 {
@@ -1537,11 +1851,9 @@ IVC *vc_image_free(IVC *image)
 	return image;
 }
 
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //    FUN��ES: LEITURA E ESCRITA DE IMAGENS (PBM, PGM E PPM)
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 
 char *netpbm_get_token(FILE *file, char *tok, int len)
 {
@@ -1574,7 +1886,6 @@ char *netpbm_get_token(FILE *file, char *tok, int len)
 	
 	return tok;
 }
-
 
 long int unsigned_char_to_bit(unsigned char *datauchar, unsigned char *databit, int width, int height)
 {
@@ -1620,7 +1931,6 @@ long int unsigned_char_to_bit(unsigned char *datauchar, unsigned char *databit, 
 	return counttotalbytes;
 }
 
-
 void bit_to_unsigned_char(unsigned char *databit, unsigned char *datauchar, int width, int height)
 {
 	int x, y;
@@ -1658,7 +1968,6 @@ void bit_to_unsigned_char(unsigned char *databit, unsigned char *datauchar, int 
 		}
 	}
 }
-
 
 IVC *vc_read_image(char *filename)
 {
@@ -1778,7 +2087,6 @@ IVC *vc_read_image(char *filename)
 	
 	return image;
 }
-
 
 int vc_write_image(char *filename, IVC *image)
 {
