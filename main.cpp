@@ -35,7 +35,7 @@ void vc_timer(void) {
 
 int main(void) {
 	// V�deo
-	char videofile[100] = "C:/Users/ajmr1/Documents/VCWORK/video_resistors.mp4";
+	char videofile[52] = "C:/Users/ajmr1/Documents/VCWORK/video_resistors.mp4";
 	cv::VideoCapture capture;
 	struct
 	{
