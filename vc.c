@@ -18,6 +18,26 @@
 #include "vc.h"
 #define MY_MAX(a, b ) (a > b ? a : b)
 
+
+int vc_red_line(IVC *frame, int line){
+
+	int height = frame->height;
+	int channels = frame->channels;
+	int bytesperline = frame->bytesperline;
+
+	int pos = 0;
+	for (int y = 0 ; y <= line; y++){
+		for (int x = 0; x < bytesperline; x=x+channels){
+			if ( y == line){
+				pos = x + y * bytesperline ;
+				frame->data[pos] = 0;
+				frame->data[pos+1] = 0;
+				frame->data[pos+2] = 255; 
+			}
+		}
+	}
+}
+
 // gain = 2 (prof)
 
 // datadst = datasrc + sum/16 * gain
@@ -1776,6 +1796,25 @@ int vc_rgb_get_red_gray(IVC *src, IVC *dst){
 		}
 	}
 	return 1;
+}
+
+
+int vc_rgb_negative_70(IVC *frame, float cutoff){
+
+	int width = frame->width;
+	int height = frame->height;
+	int channels = frame->channels;
+	int bytesperline = frame->bytesperline;
+
+	int first_x = bytesperline * cutoff;
+	int last_x	= bytesperline - first_x; // poderia ser bytesperline - bytesperline * 0.3
+	int pos = 0;
+	for ( int y=0 ; y<height; y++){
+		for ( int x=first_x; x<last_x; x++){
+			pos = x + y * bytesperline;
+			frame->data[pos] = 255 - frame->data[pos];
+		}
+	}
 }
 
 int vc_rgb_negative(IVC *src, IVC *dst){

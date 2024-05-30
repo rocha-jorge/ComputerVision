@@ -74,6 +74,9 @@ int main(void) {
 	video.width = (int)capture.get(cv::CAP_PROP_FRAME_WIDTH);
 	video.height = (int)capture.get(cv::CAP_PROP_FRAME_HEIGHT);
 
+	// inicializar variavel nframe para condição while funcionar
+	video.nframe = 0;
+
 	/* Cria uma janela para exibir o v�deo */
 	cv::namedWindow("VC - VIDEO", cv::WINDOW_AUTOSIZE);
 
@@ -81,7 +84,7 @@ int main(void) {
 	vc_timer();
 
 	cv::Mat frame;
-	while (key != 'q') {
+	while (key != 'q' && video.nframe <= 650) {
 		/* Leitura de uma frame do v�deo */
 		capture.read(frame);
 
@@ -114,23 +117,26 @@ int main(void) {
         }
 
 		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
-		/*memcpy(image->data, frame.data, video.width * video.height * 3);
+		memcpy(image->data, frame.data, video.width * video.height * 3);
 
 		// Executa uma fun��o da nossa biblioteca vc								operação sobre a imagem
- 		vc_rgb_get_green(image);
+ 		//vc_rgb_get_green(image);
 
+		int line = video.height/2;
+		vc_red_line(image, line);
+
+		float v_cutoff = 0.25;	// percentagem da imagem, na vertical, sobre a qual não é importante actuar
 		// Em cada frame
-		vc_rgb_negative(image,image);
+		vc_rgb_negative_70(image, v_cutoff);
 
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
-		memcpy(frame.data, image->data, video.width * video.height * 3); */
+		memcpy(frame.data, image->data, video.width * video.height * 3);
 
 
 
 		// Liberta a mem�ria da imagem IVC que havia sido criada
  		vc_image_free(image);
 	
-		// +++++++++++++++++++++++++
 
 		/* Exibe a frame */
 		cv::imshow("VC - VIDEO", frame);

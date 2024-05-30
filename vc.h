@@ -105,6 +105,11 @@ int vc_gray_lowpass_gaussian_filter(IVC *src, IVC *dst);
 int vc_gray_highpass_filter(IVC *src, IVC *dst);
 int vc_gray_highpass_filter_enhance(IVC *src, IVC *dst, int gain);
 
+// TRABALHO VCWORK TP
+
+int vc_rgb_negative_70(IVC *frame, float v_cutoff);  // v_cutoff é a percentagem de imagem que não se vai analisar na vertical
+int vc_red_line(IVC *frame, int line);
+
 #ifdef __cplusplus
 }
 #endif
