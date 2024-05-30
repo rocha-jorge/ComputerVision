@@ -10,6 +10,8 @@ extern "C" {
 #include "vc.h"
 }
 
+/* #include "vc.h" */
+
 
 void vc_timer(void) {
 	static bool running = false;
@@ -104,19 +106,30 @@ int main(void) {
 		cv::putText(frame, str, cv::Point(20, 100), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 1);
 
 
-		// Fa�a o seu c�digo aqui...
-		/*
-		// Cria uma nova imagem IVC
+ 		// Cria uma nova imagem IVC do tamanho do frame do vídeo, com 3 channels e 255 níveis
 		IVC *image = vc_image_new(video.width, video.height, 3, 255);
-		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC
-		memcpy(image->data, frame.data, video.width * video.height * 3);
-		// Executa uma fun��o da nossa biblioteca vc
-		vc_rgb_get_green(image);
-		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat
-		memcpy(frame.data, image->data, video.width * video.height * 3);
+		if (image == NULL) {
+			std::cerr << "Erro ao alocar memória para a imagem IVC!\n";
+			break;
+        }
+
+		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
+		/*memcpy(image->data, frame.data, video.width * video.height * 3);
+
+		// Executa uma fun��o da nossa biblioteca vc								operação sobre a imagem
+ 		vc_rgb_get_green(image);
+
+		// Em cada frame
+		vc_rgb_negative(image,image);
+
+		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
+		memcpy(frame.data, image->data, video.width * video.height * 3); */
+
+
+
 		// Liberta a mem�ria da imagem IVC que havia sido criada
-		vc_image_free(image);
-		*/
+ 		vc_image_free(image);
+	
 		// +++++++++++++++++++++++++
 
 		/* Exibe a frame */

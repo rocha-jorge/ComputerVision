@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.0)
 project(VCWORK)
 
 # Find OpenCV package
@@ -7,8 +7,7 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Create an executable
-#add_executable(VCWORK main.cpp vc.c)
-add_executable(VCWORK main.cpp)
+add_executable(VCWORK main.cpp vc.c)
 
 # Link OpenCV Libraries
 target_link_libraries(VCWORK ${OpenCV_LIBS})

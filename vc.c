@@ -110,7 +110,9 @@ int vc_gray_lowpass_median_filter(IVC *src, IVC *dst, int kernel){
 	int posicao1 = 0;
 	int posicao2 = 0;
 
-	int valores[matrixSize];
+	// array fixo matrixSize = 9;
+
+	int valores[9];
 	for ( int i = 0; i<matrixSize; i++){
 		valores[i]=0;
 	}
@@ -237,7 +239,8 @@ int vc_grey_edge_prewitt(IVC *src, IVC *dst, float th){
 
 	// derivada de x
 
-	float derivada_x [size];
+	// size tem de ser valor fixo 
+	float derivada_x [262144];
 	int pos = 0 ;
 	int matrix[3][3];
 
@@ -267,7 +270,7 @@ int vc_grey_edge_prewitt(IVC *src, IVC *dst, float th){
 	}
 
 	// derivada de y
-	float derivada_y [size];
+	float derivada_y [262144];
 	pos = 0; // para reutilizar a mesma variável
 
 	for (int x=0; x<height; x++){ // para cada coluna
@@ -300,7 +303,7 @@ int vc_grey_edge_prewitt(IVC *src, IVC *dst, float th){
 	///////////////////////////////////////// MAGNITUDE  /////////////////////////////////////////
 
 	// calcular magnitude do vector
-	int magnitude[size];
+	int magnitude[262144];
 	for (int i=0; i<size; i++){
 		magnitude[i] = round (   (1/sqrt(2))  *  sqrt(  pow(derivada_x[i],2) + pow(derivada_y[i],2)   )   );
 	}
@@ -308,7 +311,7 @@ int vc_grey_edge_prewitt(IVC *src, IVC *dst, float th){
 	///////////////////////////////////////// DETERMINAR T  /////////////////////////////////////////
 
 	// // inicializar array
-	int hist[niveis_intensidade];
+	int hist[256];
 	for (int i = 0; i < niveis_intensidade; i++) {
         hist[i] = 0;
     }
@@ -322,7 +325,7 @@ int vc_grey_edge_prewitt(IVC *src, IVC *dst, float th){
 	// CFD      // dividir ocorrências pelo número de pixeis (poderia ser também o total de ocorrências, é igual) para obter um array de função acumulada, com valores entre 0 e 1
 
 	// // iniciar array
-	float cfd[niveis_intensidade];
+	float cfd[256];
 	cfd[0] = 0;				// iniciar a primeira posição em zero , as outras não é necessário
 
 	// preencher array cfd e contar intensidade tal que ts_intensity >= ts_percent
@@ -394,7 +397,7 @@ int vc_gray_histogram_equalization(IVC *src, IVC *dst){
 
 	// criar histograma
 	int niveis_intensidade = levels +1; // por alguma razao levels tem apenas 255 níveis e não 256
-	float hist[niveis_intensidade];
+	float hist[256];
 	for (int i=0 ; i<niveis_intensidade ; i++){
 		hist[i]=0;
 	}
@@ -411,7 +414,7 @@ int vc_gray_histogram_equalization(IVC *src, IVC *dst){
 	float n_pixeis = width * height;
 
 	// criar array funçao cumulativa
-	float cfd[niveis_intensidade];
+	float cfd[256];
 	for (int i=0; i< niveis_intensidade; i++){
 		cfd[i] = 0;
 	}
@@ -459,7 +462,7 @@ int vc_gray_histogram_show(IVC *src, IVC *dst){
 	int niveis_intensidade = levels + 1 ;
 
 	// inicializar array
-	int hist[niveis_intensidade];  
+	int hist[256];  
 	for (int i = 0; i < niveis_intensidade; i++) {
         hist[i] = 0;
     }
@@ -478,7 +481,7 @@ int vc_gray_histogram_show(IVC *src, IVC *dst){
     }
 	// normalizacao : (hist/max) * height ( int(Quant. Pixeis))
 	// aqui fazemos uma regra de 3 simples para saber qual o valor no eixo dos yy (numero de pixeis contados) a mostrar para cada x (nível de intensidade)
-	int hist_graf [niveis_intensidade];
+	int hist_graf [256];
 	for (int i = 0; i < niveis_intensidade; i++) {
         hist_graf[i] = 0;
     }
@@ -791,8 +794,8 @@ int vc_binary_blob_info(IVC *src, OVC *blobs, int nblobs)
 		// Centro de Gravidade
 		//blobs[i].xc = (xmax - xmin) / 2;
 		//blobs[i].yc = (ymax - ymin) / 2;
-		blobs[i].xc = sumx / MAX(blobs[i].area, 1);
-		blobs[i].yc = sumy / MAX(blobs[i].area, 1);
+		blobs[i].xc = sumx / MY_MAX(blobs[i].area, 1);
+		blobs[i].yc = sumy / MY_MAX(blobs[i].area, 1);
 	}
 
 	return 1;
@@ -1452,7 +1455,7 @@ int vc_scale_gray_to_rgb(IVC *src, IVC *dst){
 
 	// percorrer os arrays red, green e blue e atribuir o valor consoante a intensidade do gray
 
-	int d = 0;
+	d = 0;
 	for (int i = 0; i < size_src; d += 3, i++) {  // d é a posicao na imagem de destino
 		dst->data[d]   = red[src->data[i]];
 		dst->data[d+1] = green[src->data[i]];

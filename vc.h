@@ -11,6 +11,10 @@
 #ifndef VC_H
 #define VC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                   ESTRUTURA DE UMA IMAGEM
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -100,5 +104,9 @@ int vc_gray_lowpass_median_filter(IVC *src, IVC *dst, int kernel);
 int vc_gray_lowpass_gaussian_filter(IVC *src, IVC *dst);
 int vc_gray_highpass_filter(IVC *src, IVC *dst);
 int vc_gray_highpass_filter_enhance(IVC *src, IVC *dst, int gain);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -22,11 +22,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{DE857065-18AC-35F3-AD10-A3758125A96F}</ProjectGuid>
+    <ProjectGuid>{B9719883-CB97-39A9-9389-84A0E3E6435D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
-    <ProjectName>VCWORK</ProjectName>
+    <ProjectName>main.cpp</ProjectName>
     <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -60,43 +60,42 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\ajmr1\Documents\VCWORK\build\Debug\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VCWORK.dir\Debug\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VCWORK</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main.cpp.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main.cpp</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\ajmr1\Documents\VCWORK\build\Release\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VCWORK.dir\Release\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VCWORK</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main.cpp.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main.cpp</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\ajmr1\Documents\VCWORK\build\MinSizeRel\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">VCWORK.dir\MinSizeRel\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">VCWORK</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">main.cpp.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">main.cpp</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\ajmr1\Documents\VCWORK\build\RelWithDebInfo\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">VCWORK.dir\RelWithDebInfo\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">VCWORK</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">main.cpp.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">main.cpp</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/OpenCV/opencv/build/include"</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\OpenCV\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ExceptionHandling>
+      </ExceptionHandling>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
@@ -116,13 +115,13 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/Debug/VCWORK.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/Debug/VCWORK.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/Debug/main.cpp.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/Debug/main.cpp.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -131,15 +130,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/OpenCV/opencv/build/include"</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\OpenCV\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ExceptionHandling>
+      </ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
@@ -161,13 +159,13 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/Release/VCWORK.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/Release/VCWORK.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/Release/main.cpp.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/Release/main.cpp.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -176,15 +174,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/OpenCV/opencv/build/include"</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\OpenCV\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ExceptionHandling>
+      </ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <Optimization>MinSpace</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
@@ -206,13 +203,13 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/MinSizeRel/VCWORK.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/MinSizeRel/VCWORK.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/MinSizeRel/main.cpp.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/MinSizeRel/main.cpp.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -221,16 +218,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/OpenCV/opencv/build/include"</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\OpenCV\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <ExceptionHandling>
+      </ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
@@ -250,13 +246,13 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;C:\OpenCV\opencv\build\x64\vc16\lib\opencv_world490.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/RelWithDebInfo/VCWORK.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/RelWithDebInfo/VCWORK.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/ajmr1/Documents/VCWORK/build/RelWithDebInfo/main.cpp.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/ajmr1/Documents/VCWORK/build/RelWithDebInfo/main.cpp.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -321,7 +317,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\ajmr1\Documents\VCWORK\main.cpp" />
     <ClCompile Include="C:\Users\ajmr1\Documents\VCWORK\vc.c" />
   </ItemGroup>
   <ItemGroup>

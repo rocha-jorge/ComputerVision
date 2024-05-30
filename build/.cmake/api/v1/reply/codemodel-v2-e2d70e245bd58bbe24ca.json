@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.5"
+						"string" : "3.0"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -50,7 +50,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "VCWORK::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-VCWORK-Debug-e8fee10deb256d3065e8.json",
+					"jsonFile" : "target-VCWORK-Debug-b59719375290d8de1510.json",
 					"name" : "VCWORK",
 					"projectIndex" : 0
 				},
@@ -71,7 +71,7 @@
 					"jsonFile" : "directory-.-Release-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.5"
+						"string" : "3.0"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -112,7 +112,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "VCWORK::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-VCWORK-Release-63d36f3fe80d27649f8d.json",
+					"jsonFile" : "target-VCWORK-Release-e60bfc61f4ad5a887b0f.json",
 					"name" : "VCWORK",
 					"projectIndex" : 0
 				},
@@ -133,7 +133,7 @@
 					"jsonFile" : "directory-.-MinSizeRel-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.5"
+						"string" : "3.0"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -174,7 +174,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "VCWORK::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-VCWORK-MinSizeRel-50e44b2a54c37cf5aa5c.json",
+					"jsonFile" : "target-VCWORK-MinSizeRel-fa6161160001cee4a43d.json",
 					"name" : "VCWORK",
 					"projectIndex" : 0
 				},
@@ -195,7 +195,7 @@
 					"jsonFile" : "directory-.-RelWithDebInfo-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.5"
+						"string" : "3.0"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -236,7 +236,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "VCWORK::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-VCWORK-RelWithDebInfo-4441c467b0e597ba0d0d.json",
+					"jsonFile" : "target-VCWORK-RelWithDebInfo-b7df1bf5bc385861228a.json",
 					"name" : "VCWORK",
 					"projectIndex" : 0
 				},
