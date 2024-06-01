@@ -35,9 +35,25 @@ typedef struct {
 	int bytesperline;		// width * channels
 } IVC;
 
+typedef struct Zona {
+	int x_inicial;
+	int x_final;
+	int y_inicial;
+	int y_final;
+} Zona;
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //                    PROT�TIPOS DE FUN��ES
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// TRABALHO VCWORK TP
+
+int vc_red_line(IVC *frame, int line);
+int zona_detecao(IVC *image, Zona *Zone, float lateral_cutoff, float header_cutoff, float footer_cutoff);
+int binarizar_1ch_8bpp(IVC *image, Zona Zone, IVC *sem_fundo_bin, int int_fundo);
+int apagar_fora_de_zona(IVC *sem_fundo_bin, Zona Zone);
+int draw_box(OVC *array_blobs, IVC *image, int nlabels);
+int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int altura_min, int altura_max, int largura_min);
 
 // FUN��ES: ALOCAR E LIBERTAR UMA IMAGEM
 IVC *vc_image_new(int width, int height, int channels, int levels);
@@ -105,10 +121,7 @@ int vc_gray_lowpass_gaussian_filter(IVC *src, IVC *dst);
 int vc_gray_highpass_filter(IVC *src, IVC *dst);
 int vc_gray_highpass_filter_enhance(IVC *src, IVC *dst, int gain);
 
-// TRABALHO VCWORK TP
 
-int vc_rgb_negative_70(IVC *frame, float v_cutoff);  // v_cutoff é a percentagem de imagem que não se vai analisar na vertical
-int vc_red_line(IVC *frame, int line);
 
 #ifdef __cplusplus
 }

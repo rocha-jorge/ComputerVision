@@ -119,25 +119,67 @@ int main(void) {
 		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
 		memcpy(image->data, frame.data, video.width * video.height * 3);
 
-		// Executa uma fun��o da nossa biblioteca vc								operação sobre a imagem
- 		//vc_rgb_get_green(image);
+		// ZONA DE DETEÇÃO
+		float lateral_cutoff_per = 0.25;	// percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
+		float header_cutoff_per = 0.25;  // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
+		float footer_cutoff_per = 0.60;  // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
-		int line = video.height/2;
-		vc_red_line(image, line);
+		struct Zona Zone = {0, 0, 0, 0};
 
-		float v_cutoff = 0.25;	// percentagem da imagem, na vertical, sobre a qual não é importante actuar
-		// Em cada frame
-		vc_rgb_negative_70(image, v_cutoff);
+		// Define a struct Zone de deteção com base nos cutoffs definidos
+		zona_detecao(image, &Zone, lateral_cutoff_per, header_cutoff_per, footer_cutoff_per);
+
+		// ENCONTRAR resistências = identificar pixeis sum(BGR)<threshold (fundo é branco)
+		IVC *sem_fundo_bin = vc_image_new(video.width, video.height, 1, 255);
+		int int_fundo = 150;  //110
+		binarizar_1ch_8bpp(image, Zone, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel de 8bpp, apenas a zona de deteção
+
+		// APLICAR PRETO FORA DA ZONA DE DETEÇÃO
+		apagar_fora_de_zona(sem_fundo_bin, Zone);
+
+	// FECHO PARA APAGAR CABOS ---> GRANDE IMPACTO NA PERFORMANCE, NAO COMPENSA DE TODO
+	/*	IVC *open = vc_image_new(video.width, video.height, 1, 255);
+		int kernelE = 15;
+		int kernelD = 6;
+		vc_gray_close(sem_fundo_bin, open, kernelE, kernelD); */
+
+	// LABEL
+		// criar imagem para fazer os labels
+		IVC *grey_labels = vc_image_new(video.width, video.height, 1, 255);
+
+		// pesquisa a imagem original e cria os labels em outra imagem
+		int nlabels = 0;	// variavel para passar por endereço para ficar com numero de blobs identificados
+		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
+		
+		// se exisitirem blobs no frame
+	 	if (nlabels > 0) {
+
+			// analisar as características de cada blob
+			vc_binary_blob_info(grey_labels, array_blobs, nlabels);
+
+			// eliminar blobs com area menor do que a mínima de uma resistência
+			int area_min = 5000, altura_min = 53, altura_max = 58 , largura_min = 200 ;
+			int blobs_relevantes = 	filter_blobs(array_blobs, nlabels, area_min, altura_min, altura_max, largura_min);
+
+			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d\n", video.nframe,nlabels, blobs_relevantes);
+
+			// DESENHAR blobs na imagem original
+			draw_box(array_blobs, image, nlabels);
+
+			free(array_blobs);
+		}
+
+
+	// GERAR FRAME
 
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
-		memcpy(frame.data, image->data, video.width * video.height * 3);
-
-
+ 		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria 
+/*  		memcpy(frame.data, image->data, video.width * video.height * 3); */
 
 		// Liberta a mem�ria da imagem IVC que havia sido criada
  		vc_image_free(image);
+		vc_image_free(sem_fundo_bin);
 	
-
 		/* Exibe a frame */
 		cv::imshow("VC - VIDEO", frame);
 

@@ -18,6 +18,120 @@
 #include "vc.h"
 #define MY_MAX(a, b ) (a > b ? a : b)
 
+int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int altura_min, int altura_max, int largura_min){
+
+	int blobs_relevantes = 0;
+
+	for ( int i=0; i< nlabels ;i++){	// o primeiro label é o fundo e é sempre eliminado na primeira condição
+		if (array_blobs[i].height > altura_max || array_blobs[i].area < area_min ||
+			array_blobs[i].height < altura_min || array_blobs[i].width < largura_min)
+			{
+			array_blobs[i].area = 0;
+		}
+		else blobs_relevantes++;
+	}
+	return blobs_relevantes;
+}
+
+int draw_box(OVC * array_blobs, IVC *image, int nlabels){
+
+	int bytesperline = image->bytesperline;
+	int height = image->height;
+	int channels = image->channels;
+	int pos = 0;
+
+	for (int i = 0; i<nlabels; i++){     // começa no label 1 porque o 0 é o fundo e não quremos marcá-lo
+		OVC current_blob = array_blobs[i];
+
+		if (current_blob.area != 0){ // na função de filtragem, se não preencher alguma das condições, a area vai tomar o valor de zero
+			
+			int box_x_ini = (current_blob.xc - 200/2) * channels ;
+			int box_x_fin = (current_blob.xc + 200/2) * channels ;
+			int box_y_ini = (current_blob.yc - 56 /2) ;
+			int box_y_fin = (current_blob.yc + 56 /2) ;
+			
+			
+/* 			int box_x_ini = (current_blob.xc - current_blob.width /3) * channels ;
+			int box_x_fin = (current_blob.xc + current_blob.width /3) * channels ;
+			int box_y_ini = (current_blob.yc - current_blob.height /2) ;
+			int box_y_fin = (current_blob.yc + current_blob.height /2) ; */
+
+			for (int y=0; y<height; y++){
+				for (int x=0; x<bytesperline; x=x+channels){
+					if ( x == box_x_ini || x == box_x_fin  || y == box_y_ini || y == box_y_fin){
+						pos = x + bytesperline * y;
+						image->data[pos] = 0;
+						image->data[pos+1] = 0;
+						image->data[pos+2] = 255;
+					}
+				}
+			}
+		}
+	}
+return 1;
+}
+
+int apagar_fora_de_zona(IVC *sem_fundo_bin, Zona Zone){
+
+	int height = sem_fundo_bin->height;
+	int width = sem_fundo_bin->width;
+	int bytesperline = sem_fundo_bin->bytesperline;
+
+/* 	int l_pixels = Zone.x_inicial;
+	int h_pixels = Zone.y_inicial;
+	int f_pixels = Zone.y_final; */
+
+	int pos = 0;
+	for (int y = 0 ; y < height; y++){
+		for (int x = 0; x < width; x++){
+			if( y < Zone.y_inicial || y > Zone.y_final || x < Zone.x_inicial || x > Zone.x_final){
+
+				pos = x + y * bytesperline;
+				sem_fundo_bin->data[pos]=0;
+			}
+		}
+	}
+return 1;
+}
+
+
+int binarizar_1ch_8bpp(IVC *image, Zona Zone, IVC *sem_fundo_bin, int int_fundo){
+
+	int height = image->height;
+	int bytesperline = image->bytesperline;
+	int channels = image->channels;
+
+	int pos = 0;
+	int int_pixel = 0;
+	int x_bin = 0;
+
+	for (int y = Zone.y_inicial ; y <= Zone.y_final; y++){
+		for (int x = Zone.x_inicial*channels; x <= Zone.x_final*channels; x=x+channels){
+
+			pos = x + y * bytesperline ;
+			int_pixel = image->data[pos] + image->data[pos+1] + image->data[pos+2];
+
+			if ( int_pixel < int_fundo*3){
+				sem_fundo_bin->data[x_bin] = 255;
+			}
+			else{
+				sem_fundo_bin->data[x_bin] = 0;
+			}
+			x_bin++;
+		}
+	}
+return 1;
+}
+
+int zona_detecao(IVC *image, Zona *Zone, float lateral_cutoff_per, float header_cutoff_per, float footer_cutoff_per){
+
+	Zone->x_inicial = image->width  * lateral_cutoff_per;
+	Zone->x_final = image->width - Zone->x_inicial;
+	Zone->y_inicial = image->height * header_cutoff_per;
+	Zone->y_final = image->height - image->height * footer_cutoff_per;
+
+return 1;
+}
 
 int vc_red_line(IVC *frame, int line){
 
@@ -1796,25 +1910,6 @@ int vc_rgb_get_red_gray(IVC *src, IVC *dst){
 		}
 	}
 	return 1;
-}
-
-
-int vc_rgb_negative_70(IVC *frame, float cutoff){
-
-	int width = frame->width;
-	int height = frame->height;
-	int channels = frame->channels;
-	int bytesperline = frame->bytesperline;
-
-	int first_x = bytesperline * cutoff;
-	int last_x	= bytesperline - first_x; // poderia ser bytesperline - bytesperline * 0.3
-	int pos = 0;
-	for ( int y=0 ; y<height; y++){
-		for ( int x=first_x; x<last_x; x++){
-			pos = x + y * bytesperline;
-			frame->data[pos] = 255 - frame->data[pos];
-		}
-	}
 }
 
 int vc_rgb_negative(IVC *src, IVC *dst){
