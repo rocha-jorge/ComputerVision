@@ -128,21 +128,26 @@ return 1;
 
 int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff){
 
-	int x_inicial = image->width  * lateral_cutoff;
-	int x_final = image->width - x_inicial;
-	int y_inicial = image->height * header_cutoff;
-	int y_final = image->height - image->height * footer_cutoff;
+
 
 	int height = image->height;
 	int bytesperline = image->bytesperline;
 	int channels = image->channels;
 
+	int x_inicial = image->width * channels * lateral_cutoff;
+	int x_final = image->width * channels - x_inicial;
+	int y_inicial = image->height * header_cutoff;
+	int y_final = image->height - image->height * footer_cutoff;
+
 	int pos = 0;
 	for(int y=0 ; y< height	; y++){
 		for (int x=0; x<bytesperline; x=x+channels){
-			if ( (x == x_inicial || x == x_final) && (y == y_inicial || y== y_final) ){
-				pos = x + y*bytesperline;
-				image->data[pos] = 255;
+			if( ((y == y_inicial || y == y_final) && x > x_inicial && x < x_final ) ||
+				((x == x_inicial || x == x_final) && y > y_inicial && y < y_final ) ) {
+				pos = x + bytesperline * y;
+				image->data[pos] = 0;
+				image->data[pos+1] = 255;
+				image->data[pos+2] = 255;
 			}
 		}
 	}

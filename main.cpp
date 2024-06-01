@@ -118,26 +118,23 @@ int main(void) {
 		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
 		memcpy(image->data, frame.data, video.width * video.height * 3);
 
+		// ---------------------------------------------------------------------------------------------------- //
 
-
-		// ZONA DE DETEÇÃO
+	// ZONA DE DETEÇÃO
 		float lateral_cutoff = 0.26;	// percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
-		float header_cutoff = 0.25;  	// percentagem da imagem, na banda superior, sobre a qual não é importante actuar
-		float footer_cutoff = 0.60;  	// percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
+		float header_cutoff = 0.35;  	// 0.25 percentagem da imagem, na banda superior, sobre a qual não é importante actuar
+		float footer_cutoff = 0.60;  	// 0.60 percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
 		// Define a struct Zone de deteção com base nos cutoffs definidos
 		mostrar_zona_detecao(image, lateral_cutoff, header_cutoff, footer_cutoff);
 
-
-
 		// ENCONTRAR resistências = identificar pixeis sum(BGR)<threshold (fundo é branco)
 		IVC *sem_fundo_bin = vc_image_new(video.width, video.height, 1, 255);
 		int int_fundo = 150;  //110
-		binarizar_1ch_8bpp(image, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel de 8bpp, apenas a zona de deteção
+		binarizar_1ch_8bpp(image, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel 8bpp
 
-		// APLICAR PRETO FORA DA ZONA DE DETEÇÃO
+		// APLICAR PRETO FORA DA ZONA DE DETEÇÃO - optimiza o trabalho da etiquetagem
 		apagar_fora_de_zona(sem_fundo_bin, lateral_cutoff, header_cutoff, footer_cutoff );
-
 
 	// LABEL
 		// criar imagem para fazer os labels
@@ -154,7 +151,7 @@ int main(void) {
 			vc_binary_blob_info(grey_labels, array_blobs, nlabels);
 
 			// eliminar blobs com area menor do que a mínima de uma resistência
-			int area_min = 6350, area_max = 8500, altura_min = 47, altura_max = 70 , largura_min = 180 , largura_max = 300;
+			int area_min = 6609, area_max = 8492, altura_min = 47, altura_max = 70 , largura_min = 180 , largura_max = 345;
 			int blobs_relevantes = 	filter_blobs(array_blobs, nlabels, area_min, area_max, altura_min, altura_max, largura_min, largura_max);
 
 			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d \t Area: %d Altura: %d Largura: %d\n", video.nframe,nlabels, blobs_relevantes, array_blobs[0].area, array_blobs[0].height,  array_blobs[0].width);
