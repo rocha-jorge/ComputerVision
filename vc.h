@@ -49,11 +49,11 @@ typedef struct Zona {
 // TRABALHO VCWORK TP
 
 int vc_red_line(IVC *frame, int line);
-int zona_detecao(IVC *image, Zona *Zone, float lateral_cutoff, float header_cutoff, float footer_cutoff);
-int binarizar_1ch_8bpp(IVC *image, Zona Zone, IVC *sem_fundo_bin, int int_fundo);
-int apagar_fora_de_zona(IVC *sem_fundo_bin, Zona Zone);
+int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff);
+int binarizar_1ch_8bpp(IVC *image, IVC *sem_fundo_bin, int int_fundo);
+int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_cutoff, float footer_cutoff );
 int draw_box(OVC *array_blobs, IVC *image, int nlabels);
-int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int altura_min, int altura_max, int largura_min);
+int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max);
 
 // FUN��ES: ALOCAR E LIBERTAR UMA IMAGEM
 IVC *vc_image_new(int width, int height, int channels, int levels);

@@ -84,7 +84,7 @@ int main(void) {
 	vc_timer();
 
 	cv::Mat frame;
-	while (key != 'q' && video.nframe <= 650) {
+	while (key != 'q' /*&& video.nframe <= 650*/) {
 		/* Leitura de uma frame do v�deo */
 		capture.read(frame);
 
@@ -108,7 +108,6 @@ int main(void) {
 		cv::putText(frame, str, cv::Point(20, 100), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 0), 2);
 		cv::putText(frame, str, cv::Point(20, 100), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 1);
 
-
  		// Cria uma nova imagem IVC do tamanho do frame do vídeo, com 3 channels e 255 níveis
 		IVC *image = vc_image_new(video.width, video.height, 3, 255);
 		if (image == NULL) {
@@ -119,29 +118,26 @@ int main(void) {
 		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
 		memcpy(image->data, frame.data, video.width * video.height * 3);
 
-		// ZONA DE DETEÇÃO
-		float lateral_cutoff_per = 0.25;	// percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
-		float header_cutoff_per = 0.25;  // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
-		float footer_cutoff_per = 0.60;  // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
-		struct Zona Zone = {0, 0, 0, 0};
+
+		// ZONA DE DETEÇÃO
+		float lateral_cutoff = 0.26;	// percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
+		float header_cutoff = 0.25;  	// percentagem da imagem, na banda superior, sobre a qual não é importante actuar
+		float footer_cutoff = 0.60;  	// percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
 		// Define a struct Zone de deteção com base nos cutoffs definidos
-		zona_detecao(image, &Zone, lateral_cutoff_per, header_cutoff_per, footer_cutoff_per);
+		mostrar_zona_detecao(image, lateral_cutoff, header_cutoff, footer_cutoff);
+
+
 
 		// ENCONTRAR resistências = identificar pixeis sum(BGR)<threshold (fundo é branco)
 		IVC *sem_fundo_bin = vc_image_new(video.width, video.height, 1, 255);
 		int int_fundo = 150;  //110
-		binarizar_1ch_8bpp(image, Zone, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel de 8bpp, apenas a zona de deteção
+		binarizar_1ch_8bpp(image, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel de 8bpp, apenas a zona de deteção
 
 		// APLICAR PRETO FORA DA ZONA DE DETEÇÃO
-		apagar_fora_de_zona(sem_fundo_bin, Zone);
+		apagar_fora_de_zona(sem_fundo_bin, lateral_cutoff, header_cutoff, footer_cutoff );
 
-	// FECHO PARA APAGAR CABOS ---> GRANDE IMPACTO NA PERFORMANCE, NAO COMPENSA DE TODO
-	/*	IVC *open = vc_image_new(video.width, video.height, 1, 255);
-		int kernelE = 15;
-		int kernelD = 6;
-		vc_gray_close(sem_fundo_bin, open, kernelE, kernelD); */
 
 	// LABEL
 		// criar imagem para fazer os labels
@@ -150,7 +146,7 @@ int main(void) {
 		// pesquisa a imagem original e cria os labels em outra imagem
 		int nlabels = 0;	// variavel para passar por endereço para ficar com numero de blobs identificados
 		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
-		
+
 		// se exisitirem blobs no frame
 	 	if (nlabels > 0) {
 
@@ -158,23 +154,43 @@ int main(void) {
 			vc_binary_blob_info(grey_labels, array_blobs, nlabels);
 
 			// eliminar blobs com area menor do que a mínima de uma resistência
-			int area_min = 5000, altura_min = 53, altura_max = 58 , largura_min = 200 ;
-			int blobs_relevantes = 	filter_blobs(array_blobs, nlabels, area_min, altura_min, altura_max, largura_min);
+			int area_min = 6350, area_max = 8500, altura_min = 47, altura_max = 70 , largura_min = 180 , largura_max = 300;
+			int blobs_relevantes = 	filter_blobs(array_blobs, nlabels, area_min, area_max, altura_min, altura_max, largura_min, largura_max);
 
-			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d\n", video.nframe,nlabels, blobs_relevantes);
+			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d \t Area: %d Altura: %d Largura: %d\n", video.nframe,nlabels, blobs_relevantes, array_blobs[0].area, array_blobs[0].height,  array_blobs[0].width);
 
 			// DESENHAR blobs na imagem original
 			draw_box(array_blobs, image, nlabels);
 
-			free(array_blobs);
+
 		}
 
 
 	// GERAR FRAME
 
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
- 		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria 
-/*  		memcpy(frame.data, image->data, video.width * video.height * 3); */
+/*  		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria  */
+ 		memcpy(frame.data, image->data, video.width * video.height * 3);
+
+		// escrever informações junto da label
+		for ( int i=0 ; i < nlabels; i++){
+			if ( array_blobs[i].area != 0){
+				OVC current_blob = array_blobs[i] ;
+				str = std::string("Area: ").append(std::to_string(current_blob.area));
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-25), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-25), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
+
+				str = std::string("Altura: ").append(std::to_string(current_blob.height));
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-75), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-75), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
+
+				str = std::string("Largura: ").append(std::to_string(current_blob.width));
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-125), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-125), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
+			}
+		}
+
+		free(array_blobs);
 
 		// Liberta a mem�ria da imagem IVC que havia sido criada
  		vc_image_free(image);

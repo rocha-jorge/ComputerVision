@@ -18,13 +18,14 @@
 #include "vc.h"
 #define MY_MAX(a, b ) (a > b ? a : b)
 
-int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int altura_min, int altura_max, int largura_min){
+int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max){
 
 	int blobs_relevantes = 0;
 
 	for ( int i=0; i< nlabels ;i++){	// o primeiro label é o fundo e é sempre eliminado na primeira condição
-		if (array_blobs[i].height > altura_max || array_blobs[i].area < area_min ||
-			array_blobs[i].height < altura_min || array_blobs[i].width < largura_min)
+		if (array_blobs[i].area < area_min || array_blobs[i].area > area_max || 
+			array_blobs[i].height < altura_min || array_blobs[i].height > altura_max ||
+			array_blobs[i].width < largura_min || array_blobs[i].width > largura_max) 
 			{
 			array_blobs[i].area = 0;
 		}
@@ -45,10 +46,10 @@ int draw_box(OVC * array_blobs, IVC *image, int nlabels){
 
 		if (current_blob.area != 0){ // na função de filtragem, se não preencher alguma das condições, a area vai tomar o valor de zero
 			
-			int box_x_ini = (current_blob.xc - 200/2) * channels ;
-			int box_x_fin = (current_blob.xc + 200/2) * channels ;
-			int box_y_ini = (current_blob.yc - 56 /2) ;
-			int box_y_fin = (current_blob.yc + 56 /2) ;
+			int x_ini = (current_blob.xc - 200/2) * channels ;
+			int x_fin = (current_blob.xc + 200/2) * channels ;
+			int y_ini = (current_blob.yc - 56 /2) ;
+			int y_fin = (current_blob.yc + 56 /2) ;
 			
 			
 /* 			int box_x_ini = (current_blob.xc - current_blob.width /3) * channels ;
@@ -56,9 +57,10 @@ int draw_box(OVC * array_blobs, IVC *image, int nlabels){
 			int box_y_ini = (current_blob.yc - current_blob.height /2) ;
 			int box_y_fin = (current_blob.yc + current_blob.height /2) ; */
 
-			for (int y=0; y<height; y++){
+ 			for (int y=0; y<height; y++){
 				for (int x=0; x<bytesperline; x=x+channels){
-					if ( x == box_x_ini || x == box_x_fin  || y == box_y_ini || y == box_y_fin){
+					if( ((y == y_ini || y == y_fin) && x > x_ini && x < x_fin ) ||
+						((x == x_ini || x == x_fin) && y > y_ini && y < y_fin ) ) {				
 						pos = x + bytesperline * y;
 						image->data[pos] = 0;
 						image->data[pos+1] = 0;
@@ -71,20 +73,21 @@ int draw_box(OVC * array_blobs, IVC *image, int nlabels){
 return 1;
 }
 
-int apagar_fora_de_zona(IVC *sem_fundo_bin, Zona Zone){
+int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_cutoff, float footer_cutoff ){
 
 	int height = sem_fundo_bin->height;
 	int width = sem_fundo_bin->width;
 	int bytesperline = sem_fundo_bin->bytesperline;
 
-/* 	int l_pixels = Zone.x_inicial;
-	int h_pixels = Zone.y_inicial;
-	int f_pixels = Zone.y_final; */
+	int x_inicial = sem_fundo_bin->width  * lateral_cutoff;
+	int x_final = sem_fundo_bin->width - x_inicial;
+	int y_inicial = sem_fundo_bin->height * header_cutoff;
+	int y_final = sem_fundo_bin->height - sem_fundo_bin->height * footer_cutoff;
 
 	int pos = 0;
 	for (int y = 0 ; y < height; y++){
 		for (int x = 0; x < width; x++){
-			if( y < Zone.y_inicial || y > Zone.y_final || x < Zone.x_inicial || x > Zone.x_final){
+			if( y < y_inicial || y > y_final || x < x_inicial || x > x_final){
 
 				pos = x + y * bytesperline;
 				sem_fundo_bin->data[pos]=0;
@@ -95,7 +98,7 @@ return 1;
 }
 
 
-int binarizar_1ch_8bpp(IVC *image, Zona Zone, IVC *sem_fundo_bin, int int_fundo){
+int binarizar_1ch_8bpp(IVC *image, IVC *sem_fundo_bin, int int_fundo){
 
 	int height = image->height;
 	int bytesperline = image->bytesperline;
@@ -105,8 +108,8 @@ int binarizar_1ch_8bpp(IVC *image, Zona Zone, IVC *sem_fundo_bin, int int_fundo)
 	int int_pixel = 0;
 	int x_bin = 0;
 
-	for (int y = Zone.y_inicial ; y <= Zone.y_final; y++){
-		for (int x = Zone.x_inicial*channels; x <= Zone.x_final*channels; x=x+channels){
+	for (int y = 0 ; y <height; y++){
+		for (int x = 0; x < bytesperline; x=x+channels){
 
 			pos = x + y * bytesperline ;
 			int_pixel = image->data[pos] + image->data[pos+1] + image->data[pos+2];
@@ -123,13 +126,26 @@ int binarizar_1ch_8bpp(IVC *image, Zona Zone, IVC *sem_fundo_bin, int int_fundo)
 return 1;
 }
 
-int zona_detecao(IVC *image, Zona *Zone, float lateral_cutoff_per, float header_cutoff_per, float footer_cutoff_per){
+int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff){
 
-	Zone->x_inicial = image->width  * lateral_cutoff_per;
-	Zone->x_final = image->width - Zone->x_inicial;
-	Zone->y_inicial = image->height * header_cutoff_per;
-	Zone->y_final = image->height - image->height * footer_cutoff_per;
+	int x_inicial = image->width  * lateral_cutoff;
+	int x_final = image->width - x_inicial;
+	int y_inicial = image->height * header_cutoff;
+	int y_final = image->height - image->height * footer_cutoff;
 
+	int height = image->height;
+	int bytesperline = image->bytesperline;
+	int channels = image->channels;
+
+	int pos = 0;
+	for(int y=0 ; y< height	; y++){
+		for (int x=0; x<bytesperline; x=x+channels){
+			if ( (x == x_inicial || x == x_final) && (y == y_inicial || y== y_final) ){
+				pos = x + y*bytesperline;
+				image->data[pos] = 255;
+			}
+		}
+	}
 return 1;
 }
 
