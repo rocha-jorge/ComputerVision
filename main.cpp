@@ -118,8 +118,7 @@ int main(void) {
 		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
 		memcpy(image->data, frame.data, video.width * video.height * 3);
 
-		// ---------------------------------------------------------------------------------------------------- //
-
+	//#################################################################################################################
 	// ZONA DE DETEÇÃO
 		float lateral_cutoff = 0.26;	//      			percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
 		float header_cutoff = 0.35;  	// anterior=0.35 // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
@@ -174,38 +173,41 @@ int main(void) {
 
 
 
-
 	// GERAR FRAME
 
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
 /*  		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria  */
  		memcpy(frame.data, image->data, video.width * video.height * 3);
 
-		// Liberta a mem�ria da imagem IVC que havia sido criada
- 		vc_image_free(image);
-
-
 		// escrever informações junto da label
 		for ( int i=0 ; i < nlabels; i++){
 			if ( array_blobs[i].area != 0){
 				OVC current_blob = array_blobs[i] ;
 				str = std::string("Area: ").append(std::to_string(current_blob.area));
-				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-25), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
-				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-25), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y+125), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y+125), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
 
 				str = std::string("Altura: ").append(std::to_string(current_blob.height));
-				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-75), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
-				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-75), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y+175), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y+175), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
 
 				str = std::string("Largura: ").append(std::to_string(current_blob.width));
-				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-125), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
-				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y-125), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y+225), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 0), 2);
+				cv::putText(frame, str, cv::Point(current_blob.x, current_blob.y+225), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 1);
 			}
 		}
-
 		free(array_blobs);
 
-		// ---------------------------------------------------------------------------------------------------- //
+		// desenhar área de deteção
+		int detect_x = image->width*lateral_cutoff;
+		int detect_y =  image->height*header_cutoff -25;
+		str = std::string("Area de Detecao: ");
+		cv::putText(frame, str, cv::Point(detect_x, detect_y), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 0), 2);
+		cv::putText(frame, str, cv::Point(detect_x, detect_y), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 255), 1);
+
+ 		vc_image_free(image);
+
+		//################################################################################################################# //
 
 		/* Exibe a frame */
 		cv::imshow("VC - VIDEO", frame);
