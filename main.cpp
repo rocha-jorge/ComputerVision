@@ -121,19 +121,19 @@ int main(void) {
 		// ---------------------------------------------------------------------------------------------------- //
 
 	// ZONA DE DETEÇÃO
-		float lateral_cutoff = 0.26;	// percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
-		float header_cutoff = 0.35;  	// 0.25 percentagem da imagem, na banda superior, sobre a qual não é importante actuar
-		float footer_cutoff = 0.60;  	// 0.60 percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
+		float lateral_cutoff = 0.26;	//      			percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
+		float header_cutoff = 0.35;  	// anterior=0.25 // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
+		float footer_cutoff = 0.35;  	// anterior=0.60 // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
 		// Define a struct Zone de deteção com base nos cutoffs definidos
 		mostrar_zona_detecao(image, lateral_cutoff, header_cutoff, footer_cutoff);
 
-		// ENCONTRAR resistências = identificar pixeis sum(BGR)<threshold (fundo é branco)
+		// encontrar resistências : identificar pixeis sum(BGR)<int_fundo (fundo é branco)
 		IVC *sem_fundo_bin = vc_image_new(video.width, video.height, 1, 255);
 		int int_fundo = 150;  //110
 		binarizar_1ch_8bpp(image, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel 8bpp
 
-		// APLICAR PRETO FORA DA ZONA DE DETEÇÃO - optimiza o trabalho da etiquetagem
+		// aplicar preto fora da zona de deteção - optimiza o trabalho da etiquetagem
 		apagar_fora_de_zona(sem_fundo_bin, lateral_cutoff, header_cutoff, footer_cutoff );
 
 	// LABEL
@@ -159,8 +159,19 @@ int main(void) {
 			// DESENHAR blobs na imagem original
 			draw_box(array_blobs, image, nlabels);
 
+		// IDENTIFICAR
 
+			int id = resist_id(array_blobs, image, nlabels, largura_max);
+			switch (id) {
+				case 1:		printf("Monday		\n");	break;
+				case 2:		printf("Tuesday		\n");	break;
+				case 3:		printf("Wednesday	\n");	break;
+				case 4:		printf("Thursday	\n");	break;
+				case 5:		printf("Friday		\n");	break;
+			}
 		}
+
+
 
 
 	// GERAR FRAME

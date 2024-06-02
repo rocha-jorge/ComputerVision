@@ -18,6 +18,47 @@
 #include "vc.h"
 #define MY_MAX(a, b ) (a > b ? a : b)
 
+int resist_id(OVC *array_blobs, IVC *image, int nlabels, int largura_max){
+
+/* 	int *perfil = (int*)malloc(largura_max * sizeof(int)); */
+
+	int valor = 0;
+	int pos_image = 0;
+	int x_inicial_perfil = 0 , x_final_perfil = 0;
+	int channels = image->channels;
+
+	// array para guardar o perfil de cor central de cada blob
+	// bytes_do_perfil = largura_max * 3; //channels = 340 * 3 = 1020
+	int perfil[1020];
+
+	for( int i = 0; i<1020; i++){ perfil[i]=0;}
+
+	for ( int i=0 ; i< nlabels; i++){						// para cada blob
+		if ( array_blobs[i].area != 0){						// se o blob for "relevante"
+
+			x_inicial_perfil = (array_blobs->xc - 340/2) ;	// inicio do blob na imagem original 3 channels
+			x_final_perfil   = (array_blobs->xc + 340/2) ; // fim do blob na imagem original 3 channels
+
+			for ( int j = 0; j< 1020; j++){					// para cada channel do perfil
+
+				pos_image = x_inicial_perfil + j ;			// no pixel e channel certos da "image"	
+				perfil[j] = image->data[pos_image];			// copia o valor do channel para o array				
+			}
+		}
+	}
+
+
+	// resistencias no video
+	// 1. Verde 	Azul 		Vermelha 	Dourado   	5 6 *100	 5600
+	// 2. Vermelho 	Vermelho 	Castanho 	Dourado		2 2 *10		  220
+	// 3. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
+	// 4. Vermelho	Vermelho	Vermelho	Dourado		2 2 *100	 2200
+	// 5. Castanho	Preto		Laranja		Dourado		1 0 *1000	10000
+	// 6. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
+
+	return 1;
+}
+
 int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max){
 
 	int blobs_relevantes = 0;

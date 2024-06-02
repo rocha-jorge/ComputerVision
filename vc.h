@@ -54,6 +54,7 @@ int binarizar_1ch_8bpp(IVC *image, IVC *sem_fundo_bin, int int_fundo);
 int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_cutoff, float footer_cutoff );
 int draw_box(OVC *array_blobs, IVC *image, int nlabels);
 int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max);
+int resist_id(OVC *array_blobs, IVC *image, int nlabels, int largura_max);
 
 // FUN��ES: ALOCAR E LIBERTAR UMA IMAGEM
 IVC *vc_image_new(int width, int height, int channels, int levels);
