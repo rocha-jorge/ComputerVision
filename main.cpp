@@ -122,7 +122,7 @@ int main(void) {
 	// ZONA DE DETEÇÃO
 		float lateral_cutoff = 0.26;	//      			percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
 		float header_cutoff = 0.35;  	// anterior=0.35 // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
-		float footer_cutoff = 0.60;  	// anterior=0.60 // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
+		float footer_cutoff = 0.35;  	// anterior=0.60 // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
 		// Define a struct Zone de deteção com base nos cutoffs definidos
 		mostrar_zona_detecao(image, lateral_cutoff, header_cutoff, footer_cutoff);
@@ -144,33 +144,64 @@ int main(void) {
 		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
 		vc_image_free(sem_fundo_bin);
 
-		// se exisitirem blobs no frame
-	 	if (nlabels > 0) {
+	// FILTRAR LABELS
+
+		int count_relevantes = 0;
+		OVC *array_blobs_relevantes = 0;
+
+	 	if (nlabels > 0) {   		// se exisitirem blobs no frame
 
 			// analisar as características de cada blob
 			vc_binary_blob_info(grey_labels, array_blobs, nlabels);
 
-			// eliminar blobs com area menor do que a mínima de uma resistência
-			int area_min = 6609, area_max = 8492, altura_min = 47, altura_max = 70 , largura_min = 180 , largura_max = 345;
-			int blobs_relevantes = 	filter_blobs(array_blobs, nlabels, area_min, area_max, altura_min, altura_max, largura_min, largura_max);
+			// parametros para blob ser considerado válido
+			int area_min = 6609, area_max = 8492, altura_min = 48, altura_max = 70 , largura_min = 180 , largura_max = 345;
+			
+			// criar novo array apenas com os blobs relevantes
 
-			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d \t Area: %d Altura: %d Largura: %d\n", video.nframe,nlabels, blobs_relevantes, array_blobs[0].area, array_blobs[0].height,  array_blobs[0].width);
+			array_blobs_relevantes = filter_blobs(array_blobs, nlabels, &count_relevantes,area_min, area_max, altura_min, altura_max, largura_min, largura_max);
 
-			// DESENHAR blobs na imagem original
-			draw_box(array_blobs, image, nlabels);
-
-		// IDENTIFICAR
-
-			int id = resist_id(array_blobs, image, nlabels, largura_max);
-/* 			switch (id) {
-				case 1:		printf("Monday		\n");	break;
-				case 2:		printf("Tuesday		\n");	break;
-				case 3:		printf("Wednesday	\n");	break;
-				case 4:		printf("Thursday	\n");	break;
-				case 5:		printf("Friday		\n");	break;
-			} */
+			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d \t Area: %d Altura: %d Largura: %d\n", video.nframe,nlabels, count_relevantes, array_blobs[0].area, array_blobs[0].height,  array_blobs[0].width);
 		}
 
+		if (count_relevantes>0){   // se algum blob parecer ser uma resistência relevante
+
+			// desenhar blobs relevantes
+			draw_box(array_blobs_relevantes, image, count_relevantes);
+
+			// analisar qual a resistência de cada blob
+			analisar_blobs(array_blobs_relevantes, count_relevantes,image);
+		}
+		
+		//  Criar imagem com tamanho da zona a analisar
+/* 		for ( int i = 0 ; i< nlabels; i++){
+
+		}
+		vc_image_new() */
+
+		//  Converter para HSV e filtrar por verde (verde)
+		// 	Analisar verde
+
+
+		// 	Analisar Vermelho
+
+		
+
+			// resistencias no video
+			// 1. Verde 	Azul 		Vermelho 	Dourado   	5 6 *100	 5600
+			// 2. Vermelho 	Vermelho 	Castanho 	Dourado		2 2 *10		  220
+			// 3. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
+			// 4. Vermelho	Vermelho	Vermelho	Dourado		2 2 *100	 2200
+			// 5. Castanho	Preto		Laranja		Dourado		1 0 *1000	10000
+			// 6. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
+
+			// Verde 	= B ?:? , G ?:? , R ?:?
+			// Azul  	= B ?:? , G ?:? , R ?:?
+			// Vermelho = B ?:? , G ?:? , R ?:?
+			// Castanho = B ?:? , G ?:? , R ?:?
+			// Preto 	= B ?:? , G ?:? , R ?:?
+			// Laranja 	= B ?:? , G ?:? , R ?:?
+			// Dourado  = "Os grupos podem considerar que todas as resistências possuem uma tolerância de ±5%" pelo que não é necessário avaliar
 
 
 	// GERAR FRAME

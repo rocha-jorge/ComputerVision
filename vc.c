@@ -18,95 +18,140 @@
 #include "vc.h"
 #define MY_MAX(a, b ) (a > b ? a : b)
 
-int resist_id(OVC *array_blobs, IVC *image, int nlabels, int largura_max){
+int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image){
 
-/* 	int *perfil = (int*)malloc(largura_max * sizeof(int)); */
+	for (int i = 0; i<count_relevantes; i++){	// para cada blob
+		OVC *current_blob = &array_blobs_relevantes[i];
+		IVC *blob_HSV = vc_image_new(image->width, image->height, 3, image->levels);	 // criar imagem do tamanho do blob para receber o output da conversao
+	/* 	bgr_blobzone_to_hsv(image,blob_HSV,current_blob); */
+		vc_rgb_to_hsv2(image,blob_HSV);
+		vc_write_image("blob_HSV.ppm", blob_HSV);
 
-	int valor = 0;
-	int pos_image = 0;
-	int x_inicial_perfil = 0 , x_final_perfil = 0;
-	int channels = image->channels;
-
-	// array para guardar o perfil de cor central de cada blob
-	// bytes_do_perfil = largura_max * 3; //channels = 340 * 3 = 1020
-	int perfil[1020];
-
-	for( int i = 0; i<1020; i++){ perfil[i]=0;}
-
-	for ( int i=0 ; i< nlabels; i++){						// para cada blob
-		if ( array_blobs[i].area != 0){						// se o blob for "relevante"
-
-			x_inicial_perfil = (array_blobs->xc - 340/2) ;	// inicio do blob na imagem original 3 channels
-			x_final_perfil   = (array_blobs->xc + 340/2) ; // fim do blob na imagem original 3 channels
-
-			for ( int j = 0; j< 1020; j++){					// para cada channel do perfil
-
-				pos_image = x_inicial_perfil + j ;			// no pixel e channel certos da "image"	
-				perfil[j] = image->data[pos_image];			// copia o valor do channel para o array				
-			}
-		}
+		free(blob_HSV);
 	}
-
-
-	// resistencias no video
-	// 1. Verde 	Azul 		Vermelha 	Dourado   	5 6 *100	 5600
-	// 2. Vermelho 	Vermelho 	Castanho 	Dourado		2 2 *10		  220
-	// 3. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
-	// 4. Vermelho	Vermelho	Vermelho	Dourado		2 2 *100	 2200
-	// 5. Castanho	Preto		Laranja		Dourado		1 0 *1000	10000
-	// 6. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
-
-	return 1;
+return 1;
 }
 
-int filter_blobs (OVC *array_blobs, int nlabels, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max){
 
-	int blobs_relevantes = 0;
+int bgr_blobzone_to_hsv (IVC *image, IVC *blob_HSV, OVC *blob){
 
-	for ( int i=0; i< nlabels ;i++){	// o primeiro label é o fundo e é sempre eliminado na primeira condição
+	int x_inicial 	= (blob->xc - blob->width/2)*3;	// channel
+	int x_final		= x_inicial + blob->width*3 ;	// channel
+	int y_linha		= blob->yc;					
+
+	int bytesperline = image->bytesperline;
+	int pos_image = 0;
+	int pos_blobHSV = 0;
+
+	float min, max, value;
+	float saturation, hue;
+	float red, blue, green;
+
+ 	for (int x = x_inicial; x < x_final; x=x+3) { // para cada channel, de 3 em 3
+
+		pos_image = y_linha * bytesperline + x ;	 // a posição é num channel específico, é sempre o pixel X mas multiplicado pelos 3 channels
+
+		blue = 	image->data[pos_image];
+		green = image->data[pos_image+1];
+		red = 	image->data[pos_image+2];
+
+		max = (red > green ? ( red > blue ? red : blue ) : ( green > blue ? green : blue));
+		min = (red < green ? ( red < blue ? red : blue ) : ( green < blue ? green : blue));
+
+		value = max;
+		
+		if ( value == 0.0f){   // precaver contra divisão por zero
+			hue = 0.0f ;
+			saturation = 0.0f;
+		}
+		else{    // precaver contra saturaçao = 0
+			saturation = ( max - min) / value * 255.0f ; // saturation é entre 0 e 1 mas nós queremos entre 0 e 255
+
+			if(saturation == 0.0f){
+				hue = 0.0f;
+			}
+			else if	( max == red && green >= blue ){  	// if RED>BLUE && GREEN>BLUE
+				hue = 60.0f * ( green - blue )  / (max-min);		// (60 * G-B) / (max-min)	
+			}
+			else if ( max == red && blue > green){
+				hue = 360.0f + 60.0f * ( green - blue ) / (max-min);
+			}
+			else if ( max == green){
+				hue = 120.0f + 60.0f * ( blue - red ) / (max-min);
+			}
+			else hue = 240.0f + 60.0f * ( red - green) / (max-min);
+			
+			hue = hue / 360.0f * 255.0f ; // converter de 0 a 360 para 0 a 255
+		}
+
+		blob_HSV->data[pos_blobHSV]= (unsigned char)hue;
+		blob_HSV->data[pos_blobHSV] = (unsigned char)saturation;
+		blob_HSV->data[pos_blobHSV] = (unsigned char)value;
+
+		pos_blobHSV = pos_blobHSV + 3;
+    }
+	return 1 ;
+}	
+
+
+OVC *filter_blobs (OVC *array_blobs, int nlabels, int *count_relevantes, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max){
+
+	// criar array de tamanho nlabels (blobs relevantes <= numero de blobs)
+	OVC *blobs_relevantes = (OVC *)calloc(nlabels, sizeof(OVC)); // as posição não ocupadas ficam a 0 ou null
+		if (blobs_relevantes == NULL) {			// verificar se a alocação teve sucesso, caso contrário toda a lógica falha
+		printf("Memory allocation failed\n");
+		return NULL;
+		}
+
+	int blobs_ok = 0;
+
+	for ( int i=0; i< nlabels ;i++){	// verificar se label está fora dos limites para ser relevante
 		if (array_blobs[i].area < area_min || array_blobs[i].area > area_max || 
 			array_blobs[i].height < altura_min || array_blobs[i].height > altura_max ||
 			array_blobs[i].width < largura_min || array_blobs[i].width > largura_max) 
 			{
 			array_blobs[i].area = 0;
 		}
-		else blobs_relevantes++;
+		else{							// se estiver dentro dos limites -> array blobs_relevantes na 1a posição livre	
+			blobs_relevantes[blobs_ok] = array_blobs[i];
+			blobs_ok++;
+		}
 	}
-	return blobs_relevantes;
+
+	*count_relevantes = blobs_ok;
+
+	return blobs_relevantes; // array
 }
 
-int draw_box(OVC * array_blobs, IVC *image, int nlabels){
+int draw_box(OVC * blobs_relevantes, IVC *image, int count_relevantes){
 
 	int bytesperline = image->bytesperline;
 	int height = image->height;
 	int channels = image->channels;
 	int pos = 0;
 
-	for (int i = 0; i<nlabels; i++){     // começa no label 1 porque o 0 é o fundo e não quremos marcá-lo
-		OVC current_blob = array_blobs[i];
+	for (int i = 0; i<count_relevantes; i++){     // começa no label 1 porque o 0 é o fundo e não quremos marcá-lo
+		
+		OVC current_blob = blobs_relevantes[i];
+			
+		int x_ini = (current_blob.xc - 200/2) * channels ;
+		int x_fin = (current_blob.xc + 200/2) * channels ;
+		int y_ini = (current_blob.yc - 56 /2) ;
+		int y_fin = (current_blob.yc + 56 /2) ;
+		
+/* 		int box_x_ini = (current_blob.xc - current_blob.width /3) * channels ;
+		int box_x_fin = (current_blob.xc + current_blob.width /3) * channels ;
+		int box_y_ini = (current_blob.yc - current_blob.height /2) ;
+		int box_y_fin = (current_blob.yc + current_blob.height /2) ; */
 
-		if (current_blob.area != 0){ // na função de filtragem, se não preencher alguma das condições, a area vai tomar o valor de zero
-			
-			int x_ini = (current_blob.xc - 200/2) * channels ;
-			int x_fin = (current_blob.xc + 200/2) * channels ;
-			int y_ini = (current_blob.yc - 56 /2) ;
-			int y_fin = (current_blob.yc + 56 /2) ;
-			
-			
-/* 			int box_x_ini = (current_blob.xc - current_blob.width /3) * channels ;
-			int box_x_fin = (current_blob.xc + current_blob.width /3) * channels ;
-			int box_y_ini = (current_blob.yc - current_blob.height /2) ;
-			int box_y_fin = (current_blob.yc + current_blob.height /2) ; */
-
- 			for (int y=0; y<height; y++){
-				for (int x=0; x<bytesperline; x=x+channels){
-					if( ((y == y_ini || y == y_fin) && x > x_ini && x < x_fin ) ||
-						((x == x_ini || x == x_fin) && y > y_ini && y < y_fin ) ) {				
-						pos = x + bytesperline * y;
-						image->data[pos] = 0;
-						image->data[pos+1] = 0;
-						image->data[pos+2] = 255;
-					}
+		for (int y=0; y<height; y++){
+			for (int x=0; x<bytesperline; x=x+channels){
+				if( ((y == y_ini || y == y_fin) && x > x_ini && x < x_fin ) ||
+					((x == x_ini || x == x_fin) && y > y_ini && y < y_fin ) ) {				
+					pos = x + bytesperline * y;
+					image->data[pos] = 0;
+					image->data[pos+1] = 0;
+					image->data[pos+2] = 255;
 				}
 			}
 		}
@@ -1788,9 +1833,13 @@ int vc_rgb_to_hsv2 (IVC *src, IVC *dst){
 
 	for ( int i=0 ; i<size ; i=i+channels){				  
 		
-		red = 	src->data[i];
+/* 		red = 	src->data[i];
 		blue = 	src->data[i+1];
-		green = src->data[i+2];
+		green = src->data[i+2]; */
+
+		blue = 	src->data[i];
+		green = 	src->data[i+1];
+		red = src->data[i+2];
 
 		max = (red > green ? ( red > blue ? red : blue ) : ( green > blue ? green : blue));
 		min = (red < green ? ( red < blue ? red : blue ) : ( green < blue ? green : blue));
