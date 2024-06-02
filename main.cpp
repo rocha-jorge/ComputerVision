@@ -122,8 +122,8 @@ int main(void) {
 
 	// ZONA DE DETEÇÃO
 		float lateral_cutoff = 0.26;	//      			percentagem da imagem, nas bandas laterais, sobre a qual não é importante actuar
-		float header_cutoff = 0.35;  	// anterior=0.25 // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
-		float footer_cutoff = 0.35;  	// anterior=0.60 // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
+		float header_cutoff = 0.35;  	// anterior=0.35 // percentagem da imagem, na banda superior, sobre a qual não é importante actuar
+		float footer_cutoff = 0.60;  	// anterior=0.60 // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
 		// Define a struct Zone de deteção com base nos cutoffs definidos
 		mostrar_zona_detecao(image, lateral_cutoff, header_cutoff, footer_cutoff);
@@ -143,6 +143,7 @@ int main(void) {
 		// pesquisa a imagem original e cria os labels em outra imagem
 		int nlabels = 0;	// variavel para passar por endereço para ficar com numero de blobs identificados
 		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
+		vc_image_free(sem_fundo_bin);
 
 		// se exisitirem blobs no frame
 	 	if (nlabels > 0) {
@@ -162,13 +163,13 @@ int main(void) {
 		// IDENTIFICAR
 
 			int id = resist_id(array_blobs, image, nlabels, largura_max);
-			switch (id) {
+/* 			switch (id) {
 				case 1:		printf("Monday		\n");	break;
 				case 2:		printf("Tuesday		\n");	break;
 				case 3:		printf("Wednesday	\n");	break;
 				case 4:		printf("Thursday	\n");	break;
 				case 5:		printf("Friday		\n");	break;
-			}
+			} */
 		}
 
 
@@ -179,6 +180,10 @@ int main(void) {
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
 /*  		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria  */
  		memcpy(frame.data, image->data, video.width * video.height * 3);
+
+		// Liberta a mem�ria da imagem IVC que havia sido criada
+ 		vc_image_free(image);
+
 
 		// escrever informações junto da label
 		for ( int i=0 ; i < nlabels; i++){
@@ -200,10 +205,8 @@ int main(void) {
 
 		free(array_blobs);
 
-		// Liberta a mem�ria da imagem IVC que havia sido criada
- 		vc_image_free(image);
-		vc_image_free(sem_fundo_bin);
-	
+		// ---------------------------------------------------------------------------------------------------- //
+
 		/* Exibe a frame */
 		cv::imshow("VC - VIDEO", frame);
 
