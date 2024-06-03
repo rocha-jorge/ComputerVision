@@ -110,10 +110,6 @@ int main(void) {
 
  		// Cria uma nova imagem IVC do tamanho do frame do vídeo, com 3 channels e 255 níveis
 		IVC *image = vc_image_new(video.width, video.height, 3, 255);
-		if (image == NULL) {
-			std::cerr << "Erro ao alocar memória para a imagem IVC!\n";
-			break;
-        }
 
 		// Copia dados de imagem da estrutura cv::Mat para uma estrutura IVC		cv::Mat - > IVC
 		memcpy(image->data, frame.data, video.width * video.height * 3);
@@ -125,7 +121,7 @@ int main(void) {
 		float footer_cutoff = 0.35;  	// anterior=0.60 // percentagem da imagem, na banda inferior, sobre a qual não é importante actuar
 
 		// Define a struct Zone de deteção com base nos cutoffs definidos
-		mostrar_zona_detecao(image, lateral_cutoff, header_cutoff, footer_cutoff);
+		mostrar_zona_analise(image, lateral_cutoff, header_cutoff, footer_cutoff);
 
 		// encontrar resistências : identificar pixeis sum(BGR)<int_fundo (fundo é branco)
 		IVC *sem_fundo_bin = vc_image_new(video.width, video.height, 1, 255);
@@ -133,13 +129,9 @@ int main(void) {
 		binarizar_1ch_8bpp(image, sem_fundo_bin, int_fundo);  // binariza, para imagem 1 channel 8bpp
 
 		// aplicar preto fora da zona de deteção - optimiza o trabalho da etiquetagem
-		apagar_fora_de_zona(sem_fundo_bin, lateral_cutoff, header_cutoff, footer_cutoff );
-
-		//int n_min_pixeis_vertical = 3;
-		//eliminar_cabos(sem_fundo_bin, n_min_pixeis_vertical);
+		apagar_fora_de_zona(sem_fundo_bin, lateral_cutoff, header_cutoff, footer_cutoff);
 
 		//vc_write_image("sem_fundo_bin.ppm", sem_fundo_bin);
-
 
 	// LABEL
 		// criar imagem para fazer os labels
@@ -148,7 +140,7 @@ int main(void) {
 		// pesquisa a imagem original e cria os labels em outra imagem
 		int nlabels = 0;	// variavel para passar por endereço para ficar com numero de blobs identificados
 		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
-		 vc_image_free(sem_fundo_bin);
+		vc_image_free(sem_fundo_bin);
 
 	// FILTRAR LABELS
 
@@ -162,10 +154,14 @@ int main(void) {
 
 			// parametros para blob ser considerado válido
  			int area_min = 6609, area_max = 8492, altura_min = 48, altura_max = 70 , largura_min = 180 , largura_max = 345;
-
+			
+			// criar array apenas com blobs relevantes
 			array_blobs_relevantes = filter_blobs(array_blobs, nlabels, &count_relevantes,area_min, area_max, altura_min, altura_max, largura_min, largura_max);
 
-			printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d \t Area: %d Altura: %d Largura: %d\n", video.nframe,nlabels, count_relevantes, array_blobs[0].area, array_blobs[0].height,  array_blobs[0].width);
+			//printf("--> Frame: %2d \t Blobs: %2d \t Potenciais resistencias: %2d \t Area: %d Altura: %d Largura: %d\n", video.nframe,nlabels, count_relevantes, array_blobs[0].area, array_blobs[0].height,  array_blobs[0].width);
+
+			// ajustar blob às sombras do lado direito
+			ajustar_blobs(array_blobs_relevantes, count_relevantes);
 		}
 
 		if (count_relevantes>0){   // se algum blob parecer ser uma resistência relevante
@@ -176,20 +172,6 @@ int main(void) {
 			// analisar qual a resistência de cada blob
 			analisar_blobs(array_blobs_relevantes, count_relevantes,image);
 		}
-		
-		//  Criar imagem com tamanho da zona a analisar
-/* 		for ( int i = 0 ; i< nlabels; i++){
-
-		}
-		vc_image_new() */
-
-		//  Converter para HSV e filtrar por verde (verde)
-		// 	Analisar verde
-
-
-		// 	Analisar Vermelho
-
-		
 
 			// resistencias no video
 			// 1. Verde 	Azul 		Vermelho 	Dourado   	5 6 *100	 5600
@@ -207,12 +189,11 @@ int main(void) {
 			// Laranja 	= B ?:? , G ?:? , R ?:?
 			// Dourado  = "Os grupos podem considerar que todas as resistências possuem uma tolerância de ±5%" pelo que não é necessário avaliar
 
-
 	// GERAR FRAME
 
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
 /*  		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria
- 		vc_image_free(sem_fundo_bin); */
+ 			vc_image_free(sem_fundo_bin); */
  		memcpy(frame.data, image->data, video.width * video.height * 3);
 
 		// escrever informações junto da label

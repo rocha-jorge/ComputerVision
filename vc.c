@@ -23,47 +23,97 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 	for (int i = 0; i<count_relevantes; i++){	// para cada blob
 		OVC *current_blob = &array_blobs_relevantes[i];
 
-		// criar imagem do tamanho do blob para receber o output HSV
-		IVC *frame = vc_image_new(image->width, image->height, 3, image->levels);
-		copiar_frame_nova_imagem(image,frame,current_blob);
-		vc_write_image("teste frame copy.ppm", frame);
-
+		// retira a sample do blob e converte BGR->RGB
 		IVC *sample = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
-		copiar_sample_nova_imagem(image,sample,current_blob);
-		vc_write_image("teste sample copy.ppm", sample);
-		
-		//IVC *blob_HSV = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
-		//vc_write_image("blob_HSV_antes_de_preencher", blob_HSV);
+		retirar_blob_RGB(image,sample,current_blob);
+		//vc_write_image("sampleRGB.ppm", sample);
 
-		// preencher imagem criada com dados HSV
-	 	//bgr_blobzone_to_hsv(image,blob_HSV,current_blob);
-		//free(blob_HSV);
-		free(sample);
+		// converte sample para HSV
+		vc_rgb_to_hsv(sample);
+			//vc_write_image("sampleHSV.ppm", sample);
+
+		// imagem para guardar segmentações
+		IVC *segmented = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
+		// imagem para guardar labels
+		IVC *labels = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
+		// variáveis HSV
+		int hmin, hmax, smin, smax, vmin, vmax;
+
+		// segmentar VERDE
+		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
+		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
+			// aplicar blobs de verde . a imagem de vc_hsv_segmentation já é binária
+		int *nlabels = 0;
+		OVC* blobs_verdes = vc_binary_blob_labelling(segmented, labels, nlabels);
+		vc_binary_blob_info(labels,blobs_verdes,&nlabels);
+		
+		// segmentar AZUL
+		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
+		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
+			// aplicar blobs de azul . a imagem de vc_hsv_segmentation já é binária
+		nlabels = 0;
+		OVC* blobs_azul = vc_binary_blob_labelling(segmented, &labels, nlabels);
+		vc_binary_blob_info(labels,blobs_azul,&nlabels);
+
+		// segmentar VERMELHO
+		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
+		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
+		// aplicar blobs de vermelho . a imagem de vc_hsv_segmentation já é binária
+		nlabels = 0;
+		OVC* blobs_vermelho = vc_binary_blob_labelling(segmented, labels, &nlabels);
+		vc_binary_blob_info(labels,blobs_vermelho,nlabels);
+
 	}
-return 1;
+	return 1;
 }
 
+int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes){
+	
+	// faz com que o comprimento do blob seja igual ao dobro (*.80) do comprimento do x inicial até ao centro de massa ()
+	// na prática permite diminuir o blob retirando a zona que corresponde à sombra da resistência
+	for (int i = 0; i<count_relevantes; i++){
+		array_blobs_relevantes[i].width = 2* 0.8* (array_blobs_relevantes[i].xc - array_blobs_relevantes[i].x);
+	}
+	return 1;
+}
+
+
+// retirar verde do HSV								> H <     > S <    > V <
+// identificar todas as posições do verde
+
+// retirar azul do HSV
+// identificar todas as posições do azul
+
+// retirar vermelho do HSV
+// identificar todas as posições do vermelho
+
+// retirar castanho do HSV
+// identificar todas as posições do castanho
+
+// retirar laranja do HSV
+// identificar todas as posições do laranja
+
+// analisar todas as posições e, consoante as posições no eixo dos x, determinar resistência
+
+
 // estou a tentar por esta a funcionar
-int copiar_sample_nova_imagem(IVC *image, IVC *sample, OVC *blob  ){
+int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
 
 	int bytesperline_image	= image->bytesperline;
+	int bytesperline_sample = sample->bytesperline;
 	int pos_image 			= 0;
 	int pos_sample			= 0;
-	int bytesperline_sample = sample->bytesperline;
 
 	for (int x = 0; x < blob->width; x++) {
 
 		for( int y = 0; y < blob->height ; y++){
 
 			pos_image = blob->x * 3 + x * 3    +  (blob->y   +  y) * bytesperline_image;
-
             pos_sample = x * 3 + y * bytesperline_sample;
 
 			sample->data[pos_sample]=image->data[pos_image+2];
 			sample->data[pos_sample+1]=image->data[pos_image+1];
 			sample->data[pos_sample+2]=image->data[pos_image];
-
-
 		}
 	}
 return 1;
@@ -317,7 +367,7 @@ int binarizar_1ch_8bpp(IVC *image, IVC *sem_fundo_bin, int int_fundo){
 return 1;
 }
 
-int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff){
+int mostrar_zona_analise(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff){
 
 	int height = image->height;
 	int bytesperline = image->bytesperline;
@@ -1826,7 +1876,7 @@ int vc_hsv_segmentation_output(IVC *srcdst, IVC *outputdst, int hmin, int hmax, 
 		s = (int) (((float)data[i+1]) / 255.0f * 100.0f);
 		v = (int) (((float)data[i+2]) / 255.0f * 100.0f);
 
-		if ((h>hmin) && (h <= hmax) && (s >= smin) && (s<=smax) && (v>= vmin) && (v<= vmax)){
+		if ((h>hmin) && (h <= hmax) && (s >= smin) && (s<=smax) && (v>= vmin) && (v<= vmax)) {
 			data[i]   = 255;
 			data[i+1] = 255;
 			data[i+2] = 255;
