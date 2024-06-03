@@ -22,77 +22,141 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 
 	for (int i = 0; i<count_relevantes; i++){	// para cada blob
 		OVC *current_blob = &array_blobs_relevantes[i];
-		IVC *blob_HSV = vc_image_new(image->width, image->height, 3, image->levels);	 // criar imagem do tamanho do blob para receber o output da conversao
-	/* 	bgr_blobzone_to_hsv(image,blob_HSV,current_blob); */
-		vc_rgb_to_hsv2(image,blob_HSV);
-		vc_write_image("blob_HSV.ppm", blob_HSV);
 
-		free(blob_HSV);
+		// criar imagem do tamanho do blob para receber o output HSV
+		IVC *frame = vc_image_new(image->width, image->height, 3, image->levels);
+		copiar_frame_nova_imagem(image,frame,current_blob);
+		vc_write_image("teste frame copy.ppm", frame);
+
+		IVC *sample = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
+		copiar_sample_nova_imagem(image,sample,current_blob);
+		vc_write_image("teste sample copy.ppm", sample);
+		
+		//IVC *blob_HSV = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
+		//vc_write_image("blob_HSV_antes_de_preencher", blob_HSV);
+
+		// preencher imagem criada com dados HSV
+	 	//bgr_blobzone_to_hsv(image,blob_HSV,current_blob);
+		//free(blob_HSV);
+		free(sample);
 	}
 return 1;
 }
 
+// estou a tentar por esta a funcionar
+int copiar_sample_nova_imagem(IVC *image, IVC *sample, OVC *blob  ){
+
+	int bytesperline_image	= image->bytesperline;
+	int pos_image 			= 0;
+	int pos_sample			= 0;
+	int bytesperline_sample = sample->bytesperline;
+
+	for (int x = 0; x < blob->width; x++) {
+
+		for( int y = 0; y < blob->height ; y++){
+
+			pos_image = blob->x * 3 + x * 3    +  (blob->y   +  y) * bytesperline_image;
+
+            pos_sample = x * 3 + y * bytesperline_sample;
+
+			sample->data[pos_sample]=image->data[pos_image+2];
+			sample->data[pos_sample+1]=image->data[pos_image+1];
+			sample->data[pos_sample+2]=image->data[pos_image];
+
+
+		}
+	}
+return 1;
+}
+
+// isto funciona perfeitamente
+int copiar_frame_nova_imagem(IVC *image, IVC *frame, OVC *blob  ){
+
+	int bytesperline_image	= image->bytesperline;
+	int pos_image 			= 0;
+
+	for (int x = 0; x < image->width*3; x=x+3) {
+
+		for( int y = 0; y < image->height ; y++){
+
+			pos_image = x + y * bytesperline_image;
+			frame->data[pos_image]=image->data[pos_image+2];  // aqui é preciso trocar os channels para ficar RGB e abrir direito no GIMP
+			frame->data[pos_image+1]=image->data[pos_image+1];
+			frame->data[pos_image+2]=image->data[pos_image];  // aqui é preciso trocar os channels para ficar RGB e abrir direito no GIMP
+		}
+	}
+return 1;
+}
 
 int bgr_blobzone_to_hsv (IVC *image, IVC *blob_HSV, OVC *blob){
 
-	int x_inicial 	= (blob->xc - blob->width/2)*3;	// channel
-	int x_final		= x_inicial + blob->width*3 ;	// channel
-	int y_linha		= blob->yc;					
+	// localização na imagem original "image"
+	int x_inicial_image		= blob->x *3 ;
+	int y_inicial_image		= blob->y	;
 
-	int bytesperline = image->bytesperline;
-	int pos_image = 0;
-	int pos_blobHSV = 0;
+	int x_final_image		= blob->x *3 + (blob->width-1) * 3 ;
+	int y_final_image		= blob->y	 + blob->height-1;
+
+	int bytesperline_image	= image->bytesperline;
+	int pos_image 			= 0;
+
+	// localização na imagem de destino "blob_HSV"
+	int pos_blob_HSV = 0;
 
 	float min, max, value;
 	float saturation, hue;
 	float red, blue, green;
 
- 	for (int x = x_inicial; x < x_final; x=x+3) { // para cada channel, de 3 em 3
+ 	for (int x = x_inicial_image; x < x_final_image; x=x+3) { // para cada channel, de 3 em 3
 
-		pos_image = y_linha * bytesperline + x ;	 // a posição é num channel específico, é sempre o pixel X mas multiplicado pelos 3 channels
+		for( int y = y_inicial_image; y < y_final_image ; y++){
 
-		blue = 	image->data[pos_image];
-		green = image->data[pos_image+1];
-		red = 	image->data[pos_image+2];
+			pos_image = y * bytesperline_image + x;
 
-		max = (red > green ? ( red > blue ? red : blue ) : ( green > blue ? green : blue));
-		min = (red < green ? ( red < blue ? red : blue ) : ( green < blue ? green : blue));
+			blue = 	(float)image->data[pos_image];
+			green = (float)image->data[pos_image+1];
+			red = 	(float)image->data[pos_image+2];
 
-		value = max;
-		
-		if ( value == 0.0f){   // precaver contra divisão por zero
-			hue = 0.0f ;
-			saturation = 0.0f;
-		}
-		else{    // precaver contra saturaçao = 0
-			saturation = ( max - min) / value * 255.0f ; // saturation é entre 0 e 1 mas nós queremos entre 0 e 255
+			max = (red > green ? ( red > blue ? red : blue ) : ( green > blue ? green : blue));
+			min = (red < green ? ( red < blue ? red : blue ) : ( green < blue ? green : blue));
 
-			if(saturation == 0.0f){
-				hue = 0.0f;
-			}
-			else if	( max == red && green >= blue ){  	// if RED>BLUE && GREEN>BLUE
-				hue = 60.0f * ( green - blue )  / (max-min);		// (60 * G-B) / (max-min)	
-			}
-			else if ( max == red && blue > green){
-				hue = 360.0f + 60.0f * ( green - blue ) / (max-min);
-			}
-			else if ( max == green){
-				hue = 120.0f + 60.0f * ( blue - red ) / (max-min);
-			}
-			else hue = 240.0f + 60.0f * ( red - green) / (max-min);
+			value = max;
 			
-			hue = hue / 360.0f * 255.0f ; // converter de 0 a 360 para 0 a 255
+			if ( value == 0.0f){   // precaver contra divisão por zero
+				hue = 0.0f ;
+				saturation = 0.0f;
+			}
+			else{    // precaver contra saturaçao = 0
+				saturation = ( max - min) / value * 255.0f ; // saturation é entre 0 e 1 mas nós queremos entre 0 e 255
+
+				if(saturation == 0.0f){
+					hue = 0.0f;
+				}
+				else if	( max == red && green >= blue ){  	// if RED>BLUE && GREEN>BLUE
+					hue = 60.0f * ( green - blue )  / (max-min);		// (60 * G-B) / (max-min)	
+				}
+				else if ( max == red && blue > green){
+					hue = 360.0f + 60.0f * ( green - blue ) / (max-min);
+				}
+				else if ( max == green){
+					hue = 120.0f + 60.0f * ( blue - red ) / (max-min);
+				}
+				else hue = 240.0f + 60.0f * ( red - green) / (max-min);
+				
+				hue = hue / 360.0f * 255.0f ; // converter de 0 a 360 para 0 a 255
+			}
+
+			blob_HSV->data[pos_blob_HSV]= (unsigned char)hue;
+			blob_HSV->data[pos_blob_HSV+1] = (unsigned char)saturation;
+			blob_HSV->data[pos_blob_HSV+2] = (unsigned char)value;
+
+			pos_blob_HSV = pos_blob_HSV +3 ;
 		}
 
-		blob_HSV->data[pos_blobHSV]= (unsigned char)hue;
-		blob_HSV->data[pos_blobHSV] = (unsigned char)saturation;
-		blob_HSV->data[pos_blobHSV] = (unsigned char)value;
-
-		pos_blobHSV = pos_blobHSV + 3;
     }
+	vc_write_image("blob_HSV.ppm", blob_HSV);
 	return 1 ;
 }	
-
 
 OVC *filter_blobs (OVC *array_blobs, int nlabels, int *count_relevantes, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max){
 
@@ -130,24 +194,20 @@ int draw_box(OVC * blobs_relevantes, IVC *image, int count_relevantes){
 	int channels = image->channels;
 	int pos = 0;
 
-	for (int i = 0; i<count_relevantes; i++){     // começa no label 1 porque o 0 é o fundo e não quremos marcá-lo
+	for (int i = 0; i<count_relevantes; i++){ // para cada label
 		
 		OVC current_blob = blobs_relevantes[i];
 			
-		int x_ini = (current_blob.xc - 200/2) * channels ;
-		int x_fin = (current_blob.xc + 200/2) * channels ;
-		int y_ini = (current_blob.yc - 56 /2) ;
-		int y_fin = (current_blob.yc + 56 /2) ;
-		
-/* 		int box_x_ini = (current_blob.xc - current_blob.width /3) * channels ;
-		int box_x_fin = (current_blob.xc + current_blob.width /3) * channels ;
-		int box_y_ini = (current_blob.yc - current_blob.height /2) ;
-		int box_y_fin = (current_blob.yc + current_blob.height /2) ; */
+		int x_ini = current_blob.x *3;
+ 		int x_fin = (current_blob.x + current_blob.width)*3;
+		int y_ini = current_blob.y ;
+		int y_fin = current_blob.y  + current_blob.height;
 
+		// desenhar box
 		for (int y=0; y<height; y++){
 			for (int x=0; x<bytesperline; x=x+channels){
-				if( ((y == y_ini || y == y_fin) && x > x_ini && x < x_fin ) ||
-					((x == x_ini || x == x_fin) && y > y_ini && y < y_fin ) ) {				
+				if( ((y == y_ini || y == y_fin) && x >= x_ini && x <= x_fin ) ||
+					((x == x_ini || x == x_fin) && y >= y_ini && y <= y_fin ) ) {				
 					pos = x + bytesperline * y;
 					image->data[pos] = 0;
 					image->data[pos+1] = 0;
@@ -155,8 +215,54 @@ int draw_box(OVC * blobs_relevantes, IVC *image, int count_relevantes){
 				}
 			}
 		}
+
+		// desenhar centro de massa
+		pos = 0 ;
+		int crosshair_x_ini = current_blob.xc*3 - 21; 	// bytes
+		int crosshair_x_fin = current_blob.xc*3 + 21;; 	// bytes
+		int crosshair_y_ini = current_blob.yc -  7;; 	// bytes
+		int crosshair_y_fin = current_blob.yc +  7;; 	// bytes
+
+		for (int y=0; y<height; y++){
+			for (int x=0; x<bytesperline; x=x+channels){
+				if ((x == current_blob.xc*3) && (y>=crosshair_y_ini) && (y<=crosshair_y_fin) ||
+				    (y == current_blob.yc) && (x>=crosshair_x_ini) && (x<=crosshair_x_fin)){
+						pos = x + bytesperline * y;
+						image->data[pos] = 0;
+						image->data[pos+1] = 0;
+						image->data[pos+2] = 255;
+				}
+			}
+		}
 	}
-return 1;
+	return 1;
+}
+
+int eliminar_cabos(IVC *sem_fundo_bin, int n_min_pixeis_vertical){
+
+    int height = sem_fundo_bin->height;
+    int bytesperline = sem_fundo_bin->bytesperline;
+
+    int pixeis_vertical = 0;
+    int pos = 0;
+
+    for (int x = 0; x < bytesperline; x++) {
+        pixeis_vertical = 0;
+        for (int y = 0; y < height; y++) {
+            pos = y * bytesperline + x;
+            if (sem_fundo_bin->data[pos] == 255) {
+                pixeis_vertical++;
+            }
+        }
+
+        if (pixeis_vertical < n_min_pixeis_vertical) {
+            for (int y = 0; y < height; y++) {
+                pos = y * bytesperline + x;
+                sem_fundo_bin->data[pos] = 0;
+            }
+        }
+    }
+	return 1;
 }
 
 int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_cutoff, float footer_cutoff ){
@@ -182,7 +288,6 @@ int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_c
 	}
 return 1;
 }
-
 
 int binarizar_1ch_8bpp(IVC *image, IVC *sem_fundo_bin, int int_fundo){
 
@@ -214,8 +319,6 @@ return 1;
 
 int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff){
 
-
-
 	int height = image->height;
 	int bytesperline = image->bytesperline;
 	int channels = image->channels;
@@ -228,8 +331,8 @@ int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, 
 	int pos = 0;
 	for(int y=0 ; y< height	; y++){
 		for (int x=0; x<bytesperline; x=x+channels){
-			if( ((y == y_inicial || y == y_final) && x > x_inicial && x < x_final ) ||
-				((x == x_inicial || x == x_final) && y > y_inicial && y < y_final ) ) {
+			if( ((y == y_inicial || y == y_final) && x >= x_inicial && x <= x_final ) ||
+				((x == x_inicial || x == x_final) && y >= y_inicial && y <= y_final ) ) {
 				pos = x + bytesperline * y;
 				image->data[pos] = 0;
 				image->data[pos+1] = 255;
@@ -240,24 +343,6 @@ int mostrar_zona_detecao(IVC *image, float lateral_cutoff, float header_cutoff, 
 return 1;
 }
 
-int vc_red_line(IVC *frame, int line){
-
-	int height = frame->height;
-	int channels = frame->channels;
-	int bytesperline = frame->bytesperline;
-
-	int pos = 0;
-	for (int y = 0 ; y <= line; y++){
-		for (int x = 0; x < bytesperline; x=x+channels){
-			if ( y == line){
-				pos = x + y * bytesperline ;
-				frame->data[pos] = 0;
-				frame->data[pos+1] = 0;
-				frame->data[pos+2] = 255; 
-			}
-		}
-	}
-}
 
 // gain = 2 (prof)
 

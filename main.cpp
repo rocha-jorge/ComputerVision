@@ -135,6 +135,12 @@ int main(void) {
 		// aplicar preto fora da zona de deteção - optimiza o trabalho da etiquetagem
 		apagar_fora_de_zona(sem_fundo_bin, lateral_cutoff, header_cutoff, footer_cutoff );
 
+		//int n_min_pixeis_vertical = 3;
+		//eliminar_cabos(sem_fundo_bin, n_min_pixeis_vertical);
+
+		//vc_write_image("sem_fundo_bin.ppm", sem_fundo_bin);
+
+
 	// LABEL
 		// criar imagem para fazer os labels
 		IVC *grey_labels = vc_image_new(video.width, video.height, 1, 255);
@@ -142,7 +148,7 @@ int main(void) {
 		// pesquisa a imagem original e cria os labels em outra imagem
 		int nlabels = 0;	// variavel para passar por endereço para ficar com numero de blobs identificados
 		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
-		vc_image_free(sem_fundo_bin);
+		 vc_image_free(sem_fundo_bin);
 
 	// FILTRAR LABELS
 
@@ -155,9 +161,7 @@ int main(void) {
 			vc_binary_blob_info(grey_labels, array_blobs, nlabels);
 
 			// parametros para blob ser considerado válido
-			int area_min = 6609, area_max = 8492, altura_min = 48, altura_max = 70 , largura_min = 180 , largura_max = 345;
-			
-			// criar novo array apenas com os blobs relevantes
+ 			int area_min = 6609, area_max = 8492, altura_min = 48, altura_max = 70 , largura_min = 180 , largura_max = 345;
 
 			array_blobs_relevantes = filter_blobs(array_blobs, nlabels, &count_relevantes,area_min, area_max, altura_min, altura_max, largura_min, largura_max);
 
@@ -207,7 +211,8 @@ int main(void) {
 	// GERAR FRAME
 
 		// Copia dados de imagem da estrutura IVC para uma estrutura cv::Mat		IVC -> cv::Mat
-/*  		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria  */
+/*  		memcpy(frame.data, sem_fundo_bin->data, video.width * video.height);  // funçao para ver a imagem binaria
+ 		vc_image_free(sem_fundo_bin); */
  		memcpy(frame.data, image->data, video.width * video.height * 3);
 
 		// escrever informações junto da label
