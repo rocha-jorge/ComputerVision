@@ -166,11 +166,11 @@ int main(void) {
 
 		if (count_relevantes>0){   // se algum blob parecer ser uma resistência relevante
 
-			// desenhar blobs relevantes
-			draw_box(array_blobs_relevantes, image, count_relevantes);
-
 			// analisar qual a resistência de cada blob
 			analisar_blobs(array_blobs_relevantes, count_relevantes,image);
+
+			// desenhar blobs relevantes
+			draw_box(array_blobs_relevantes, image, count_relevantes);
 		}
 
 			// resistencias no video

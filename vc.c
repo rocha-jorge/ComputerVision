@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <string.h> add .
+#include <string.h>
 #include <malloc.h>
 #include <math.h>
 #include "vc.h"
@@ -23,8 +23,11 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 	for (int i = 0; i<count_relevantes; i++){	// para cada blob
 		OVC *current_blob = &array_blobs_relevantes[i];
 
+		// definir tamanho da sample a tirar do blob
+		int sample_width = current_blob->width;
+		int sample_height = 5;
 		// retira a sample do blob e converte BGR->RGB
-		IVC *sample = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
+		IVC *sample = vc_image_new(sample_width, sample_height, 3, image->levels);
 		retirar_blob_RGB(image,sample,current_blob);
 		//vc_write_image("sampleRGB.ppm", sample);
 
@@ -32,14 +35,22 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 		vc_rgb_to_hsv(sample);
 		vc_write_image("sampleHSV.ppm", sample);
 
+		// guardar a cor das 3 posicoes
+		int bandas[3] = {0,0,0};
+
+		// identificar a cor das 3 posições
+		//cor_seccao(sample, &bandas);
+
+
+
 		// imagem para guardar segmentações
-		IVC *segmented = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
+/* 		IVC *segmented = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
 		// imagem para guardar labels
 		IVC *labels = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
 		// variáveis HSV
-		int hmin, hmax, smin, smax, vmin, vmax;
+		int hmin, hmax, smin, smax, vmin, vmax; */
 
-		// segmentar VERDE
+/* 		// segmentar VERDE
 		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
 		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
 			// aplicar blobs de verde . a imagem de vc_hsv_segmentation já é binária
@@ -61,29 +72,106 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 		// aplicar blobs de vermelho . a imagem de vc_hsv_segmentation já é binária
 		nlabels = 0;
 		OVC* blobs_vermelho = vc_binary_blob_labelling(segmented, labels, &nlabels);
-		vc_binary_blob_info(labels,blobs_vermelho,nlabels);
+		vc_binary_blob_info(labels,blobs_vermelho,nlabels); */
 
 	}
 	return 1;
 }
 
+int cor_seccao(IVC *sample, int*bandas){
 
-// retirar verde do HSV								> H <     > S <    > V <
-// identificar todas as posições do verde
+	// seccoes
+	int banda1_ini = 14/100 * sample->width;
+	int banda1_fin = 21/100 * sample->width;
+	int banda2_ini = 38/100 * sample->width;
+	int banda2_fin = 47/100 * sample->width;
+	int banda3_ini = 63/100 * sample->width;
+	int banda3_fin = 71/100 * sample->width;
 
-// retirar azul do HSV
-// identificar todas as posições do azul
+	int y_ini = 0;
+	int y_fin = sample->height;
 
-// retirar vermelho do HSV
-// identificar todas as posições do vermelho
+	// somatorios
+	float hue_total, sat_total, val_total;
+	hue_total = sat_total = val_total = 0 ;
 
-// retirar castanho do HSV
-// identificar todas as posições do castanho
+	// secção
+	float hue, sat, val;
+	hue = sat = val = 0 ;
+	int cor_id = 0;
 
-// retirar laranja do HSV
-// identificar todas as posições do laranja
+	// indexes
+	int pos = 0;
+	int contar_pixeis = 0;
 
-// analisar todas as posições e, consoante as posições no eixo dos x, determinar resistência
+	// 1a banda / seccao
+	for ( int x = banda1_ini ; x < banda1_fin; x=x+3){
+		for( int y = 0 ; y < sample->width ; y++){
+		
+			pos = x + y * sample->bytesperline;
+			hue_total += sample->data[pos];
+			sat_total += sample->data[pos+1];
+			val_total += sample->data[pos+2];
+
+			contar_pixeis++;
+		}
+	}
+
+	hue = hue_total / contar_pixeis;
+	sat = sat_total / contar_pixeis;
+	val = val_total / contar_pixeis;
+
+	bandas[0] = cor_identificar(hue, sat, val);
+
+	// 2a banda / seccao
+
+	//hue = sat = val = hue_total = sat_total = val_total = 0;
+/* 	for ( int x = banda2_ini ; x < banda2_fin; x=x+3){
+		for( int y = 0 ; y < sample->width ; y++){
+		
+			pos = x + y * sample->bytesperline;
+			hue_total += sample->data[pos];
+			sat_total += sample->data[pos+1];
+			val_total += sample->data[pos+2];
+
+			contar_pixeis++;
+		}
+	}
+
+	hue_seccao = hue_total / contar_pixeis;
+	sat_seccao = sat_total / contar_pixeis;
+	val_seccao = val_total / contar_pixeis;
+
+	bandas[1] = cor_identificar(hue_seccao, sat_seccao, val_seccao); */
+
+	return 1;
+}
+
+int cor_identificar(float hue, float sat, float val){
+
+	int red_hue_min = 181 , red_sat_min = 122 ,	red_val_min = 81;
+	int red_hue_max = 190 , red_sat_max = 128 , red_val_max = 93;
+
+	int blue_hue_min = 318 , blue_sat_min = 2 , blue_val_min = 3;
+	int blue_hue_max = 360 , blue_sat_max = 2 , blue_val_max = 3;
+
+	int green_hue_min = 174 , green_sat_min = 77 , green_val_min = 102;
+	int green_hue_max = 185 , green_sat_max = 120 , green_val_max = 115;
+
+	int orange_hue_min = 1 , orange_sat_min = 2 , orange_val_min = 3;
+	int orange_hue_max = 1 , orange_sat_max = 2 , orange_val_max = 3;
+
+	int brown_hue_min = 172 , brown_sat_min = 108 , brown_val_min = 48;
+	int brown_hue_max = 190 , brown_sat_max = 117 , brown_val_max = 59;
+
+	int black_hue_min = 1 , black_sat_min = 2 , black_val_min = 3;
+	int black_hue_max = 1 , black_sat_max = 2 , black_val_max = 3;
+
+return 1;
+
+
+}
+
 
 int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
 
@@ -92,11 +180,11 @@ int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
 	int pos_image 			= 0;
 	int pos_sample			= 0;
 
-	for (int x = 0; x < blob->width; x++) {
+	for (int x = 0; x < sample->width; x++) {
 
-		for( int y = 0; y < blob->height ; y++){
+		for( int y = 0; y < sample->height ; y++){
 
-			pos_image = blob->x * 3 + x * 3    +  (blob->y   +  y) * bytesperline_image;
+			pos_image = blob->x * 3 + x * 3     +  (blob->yc - sample->height/2 +  y) * bytesperline_image;
             pos_sample = x * 3 + y * bytesperline_sample;
 
 			sample->data[pos_sample]=image->data[pos_image+2];
@@ -189,8 +277,8 @@ int draw_box(OVC * blobs_relevantes, IVC *image, int count_relevantes){
 		// desenhar box
 		for (int y=0; y<height; y++){
 			for (int x=0; x<bytesperline; x=x+channels){
-				if( ((y == y_ini || y == y_fin) && x >= x_ini && x <= x_fin ) ||
-					((x == x_ini || x == x_fin) && y >= y_ini && y <= y_fin ) ) {				
+				if( ((y == y_ini-1 || y == y_fin) && x >= x_ini-1 && x <= x_fin ) ||
+					((x == x_ini-1 || x == x_fin) && y >= y_ini-1 && y <= y_fin ) ) {				
 					pos = x + bytesperline * y;
 					image->data[pos] = 0;
 					image->data[pos+1] = 0;
@@ -1950,7 +2038,6 @@ int vc_rgb_to_hsv(IVC *srcdst)
     unsigned char *data = (unsigned char *)srcdst->data;
     int width = srcdst->width;
     int height = srcdst->height;
-    int bytesperline= srcdst->bytesperline;
     int channels = srcdst->channels;
     float r,g,b,hue,saturation,value;
     float rgb_max, rgb_min;
