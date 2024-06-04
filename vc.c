@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <string.h>
+#include <string.h> add .
 #include <malloc.h>
 #include <math.h>
 #include "vc.h"
@@ -30,7 +30,7 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 
 		// converte sample para HSV
 		vc_rgb_to_hsv(sample);
-			//vc_write_image("sampleHSV.ppm", sample);
+		vc_write_image("sampleHSV.ppm", sample);
 
 		// imagem para guardar segmentações
 		IVC *segmented = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
@@ -67,16 +67,6 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 	return 1;
 }
 
-int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes){
-	
-	// faz com que o comprimento do blob seja igual ao dobro (*.80) do comprimento do x inicial até ao centro de massa ()
-	// na prática permite diminuir o blob retirando a zona que corresponde à sombra da resistência
-	for (int i = 0; i<count_relevantes; i++){
-		array_blobs_relevantes[i].width = 2* 0.8* (array_blobs_relevantes[i].xc - array_blobs_relevantes[i].x);
-	}
-	return 1;
-}
-
 
 // retirar verde do HSV								> H <     > S <    > V <
 // identificar todas as posições do verde
@@ -95,8 +85,6 @@ int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes){
 
 // analisar todas as posições e, consoante as posições no eixo dos x, determinar resistência
 
-
-// estou a tentar por esta a funcionar
 int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
 
 	int bytesperline_image	= image->bytesperline;
@@ -119,7 +107,6 @@ int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
 return 1;
 }
 
-// isto funciona perfeitamente
 int copiar_frame_nova_imagem(IVC *image, IVC *frame, OVC *blob  ){
 
 	int bytesperline_image	= image->bytesperline;
@@ -138,75 +125,21 @@ int copiar_frame_nova_imagem(IVC *image, IVC *frame, OVC *blob  ){
 return 1;
 }
 
-int bgr_blobzone_to_hsv (IVC *image, IVC *blob_HSV, OVC *blob){
-
-	// localização na imagem original "image"
-	int x_inicial_image		= blob->x *3 ;
-	int y_inicial_image		= blob->y	;
-
-	int x_final_image		= blob->x *3 + (blob->width-1) * 3 ;
-	int y_final_image		= blob->y	 + blob->height-1;
-
-	int bytesperline_image	= image->bytesperline;
-	int pos_image 			= 0;
-
-	// localização na imagem de destino "blob_HSV"
-	int pos_blob_HSV = 0;
-
-	float min, max, value;
-	float saturation, hue;
-	float red, blue, green;
-
- 	for (int x = x_inicial_image; x < x_final_image; x=x+3) { // para cada channel, de 3 em 3
-
-		for( int y = y_inicial_image; y < y_final_image ; y++){
-
-			pos_image = y * bytesperline_image + x;
-
-			blue = 	(float)image->data[pos_image];
-			green = (float)image->data[pos_image+1];
-			red = 	(float)image->data[pos_image+2];
-
-			max = (red > green ? ( red > blue ? red : blue ) : ( green > blue ? green : blue));
-			min = (red < green ? ( red < blue ? red : blue ) : ( green < blue ? green : blue));
-
-			value = max;
-			
-			if ( value == 0.0f){   // precaver contra divisão por zero
-				hue = 0.0f ;
-				saturation = 0.0f;
-			}
-			else{    // precaver contra saturaçao = 0
-				saturation = ( max - min) / value * 255.0f ; // saturation é entre 0 e 1 mas nós queremos entre 0 e 255
-
-				if(saturation == 0.0f){
-					hue = 0.0f;
-				}
-				else if	( max == red && green >= blue ){  	// if RED>BLUE && GREEN>BLUE
-					hue = 60.0f * ( green - blue )  / (max-min);		// (60 * G-B) / (max-min)	
-				}
-				else if ( max == red && blue > green){
-					hue = 360.0f + 60.0f * ( green - blue ) / (max-min);
-				}
-				else if ( max == green){
-					hue = 120.0f + 60.0f * ( blue - red ) / (max-min);
-				}
-				else hue = 240.0f + 60.0f * ( red - green) / (max-min);
-				
-				hue = hue / 360.0f * 255.0f ; // converter de 0 a 360 para 0 a 255
-			}
-
-			blob_HSV->data[pos_blob_HSV]= (unsigned char)hue;
-			blob_HSV->data[pos_blob_HSV+1] = (unsigned char)saturation;
-			blob_HSV->data[pos_blob_HSV+2] = (unsigned char)value;
-
-			pos_blob_HSV = pos_blob_HSV +3 ;
-		}
-
-    }
-	vc_write_image("blob_HSV.ppm", blob_HSV);
-	return 1 ;
-}	
+int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes){
+	
+	// faz com que o comprimento do blob seja igual ao dobro (*.80) do comprimento do x inicial até ao centro de massa ()
+	// na prática permite diminuir o blob retirando a zona que corresponde à sombra da resistência
+	for (int i = 0; i<count_relevantes; i++){
+		// retirar sombras do lado direito : lado direito do centro de massa é ajustado consoante o lado esquerdo
+		array_blobs_relevantes[i].width = 2* 0.75* (array_blobs_relevantes[i].xc - array_blobs_relevantes[i].x);
+			// atribuir largura máxima de uma resistência
+			//int resist_width = 150;
+			//array_blobs_relevantes[i].width = fmin(array_blobs_relevantes[i].width,resist_width);
+		// como o blob ajustado se enquadra (quase) perfeitamente à resistência, faz sentido ajustar o centro de massa
+		array_blobs_relevantes[i].xc = array_blobs_relevantes[i].x + array_blobs_relevantes[i].width/2;
+	}
+	return 1;
+}
 
 OVC *filter_blobs (OVC *array_blobs, int nlabels, int *count_relevantes, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max){
 
