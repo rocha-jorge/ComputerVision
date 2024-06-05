@@ -59,7 +59,7 @@ int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes);
 int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image);
 int copiar_frame_nova_imagem(IVC *image, IVC *frame, OVC *blob  );
 int retirar_blob_RGB(IVC *image,IVC *sample,OVC *current_blob);
-void rgb_to_hsv_gpt(IVC *image) ;
+int vc_rgb_to_hsv(IVC *srcdst);
 
 
 // FUN��ES: ALOCAR E LIBERTAR UMA IMAGEM
@@ -83,7 +83,6 @@ int vc_rgb_negative(IVC *src, IVC *dst);
 int vc_rgb_get_red_gray(IVC *src, IVC *dst);
 int vc_rgb_get_green_gray(IVC *src, IVC *dst);
 int vc_rgb_to_gray(IVC *src, IVC *dst);
-int vc_rgb_to_hsv(IVC *srcdst);
 int vc_rgb_to_hsv2 (IVC *src, IVC *dst);
 
 // SEGMENTACAO

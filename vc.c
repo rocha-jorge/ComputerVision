@@ -26,14 +26,17 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 		// definir tamanho da sample a tirar do blob
 		int sample_width = current_blob->width;
 		int sample_height = 5;
+
+
 		// retira a sample do blob e converte BGR->RGB
-		IVC *sample = vc_image_new(sample_width, sample_height, 3, image->levels);
+ 		IVC *sample = vc_image_new(sample_width, sample_height, 3, image->levels);
 		retirar_blob_RGB(image,sample,current_blob);
-		//vc_write_image("sampleRGB.ppm", sample);
+		vc_write_image("sampleRGB.ppm", sample);
 
 		// converte sample para HSV
-		rgb_to_hsv_gpt(sample);
+		rgb_to_hsv(sample);  // hue toma o valor de 0 a 255 e não de 0 a 360
 		vc_write_image("sampleHSV.ppm", sample);
+
 
 		// guardar a cor das 3 posicoes
 		int bandas[3] = {0,0,0};
@@ -168,67 +171,6 @@ int cor_identificar(float hue, float sat, float val){
 	int black_hue_max = 1 , black_sat_max = 2 , black_val_max = 3;
 
 return 1;
-
-
-}
-
-// converter RGB to HSV chatgpt
-void rgb_to_hsv_rgb(IVC *image) {
-    if (image->channels != 3) {
-        printf("The image must be an RGB image.\n");
-        return;
-    }
-
-    int width = image->width;
-    int height = image->height;
-    unsigned char *data = image->data;
-
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int index = y * image->bytesperline + x * image->channels;
-            
-            // Extract RGB values
-            double r = data[index] / 255.0;
-            double g = data[index + 1] / 255.0;
-            double b = data[index + 2] / 255.0;
-
-            // Compute max and min
-            double max = fmax(r, fmax(g, b));
-            double min = fmin(r, fmin(g, b));
-            double delta = max - min;
-
-            // Compute Value (V)
-            double v = max;
-
-            // Compute Saturation (S)
-            double s = (max == 0) ? 0 : (delta / max);
-
-            // Compute Hue (H)
-            double h = 0;
-            if (delta != 0) {
-                if (max == r) {
-                    h = 60.0 * fmod(((g - b) / delta), 6.0);
-                    if (g < b) {
-                        h += 360.0;
-                    }
-                } else if (max == g) {
-                    h = 60.0 * (((b - r) / delta) + 2.0);
-                } else if (max == b) {
-                    h = 60.0 * (((r - g) / delta) + 4.0);
-                }
-            }
-
-            // Scale Hue to 0-255
-            unsigned char hue = (unsigned char)(h / 360.0 * 255);
-            unsigned char saturation = (unsigned char)(s * 255);
-            unsigned char value = (unsigned char)(v * 255);
-
-            // Store HSV values back in the image data array
-            data[index] = hue;
-            data[index + 1] = saturation;
-            data[index + 2] = value;
-        }
-    }
 }
 
 int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
@@ -245,7 +187,7 @@ int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
 			pos_image = blob->x * 3 + x * 3     +  (blob->yc - sample->height/2 +  y) * bytesperline_image;
             pos_sample = x * 3 + y * bytesperline_sample;
 
-			sample->data[pos_sample]=image->data[pos_image+2];
+ 			sample->data[pos_sample]=image->data[pos_image+2];
 			sample->data[pos_sample+1]=image->data[pos_image+1];
 			sample->data[pos_sample+2]=image->data[pos_image];
 		}
@@ -2156,7 +2098,7 @@ int vc_rgb_to_hsv(IVC *srcdst)
         data[i + 2] = (unsigned char)(value);
         
     }
-	return 0;
+	return 1;
 }
 
 int vc_rgb_to_gray(IVC *src, IVC *dst){
