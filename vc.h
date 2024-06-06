@@ -11,6 +11,9 @@
 #ifndef VC_H
 #define VC_H
 
+#include <stdbool.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -21,6 +21,25 @@
 
 #define MY_MAX(a, b ) (a > b ? a : b)
 
+
+bool analisar_cores_memoria(cores_memoria){
+
+	// analisar sequencia de cores
+	return false;
+
+		// resistencias no video
+	// 1. Verde 	Azul 		Vermelho 	Dourado   	5 6 *100	 5600
+	// 2. Vermelho 	Vermelho 	Castanho 	Dourado		2 2 *10		  220
+	// 3. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
+	// 4. Vermelho	Vermelho	Vermelho	Dourado		2 2 *100	 2200
+	// 5. Castanho	Preto		Laranja		Dourado		1 0 *1000	10000
+	// 6. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
+
+	// Dourado  = "Os grupos podem considerar que todas as resistências possuem uma tolerância de ±5%" pelo que não é necessário avaliar
+
+}
+
+
 int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image, int *cores_memoria){
 
 	for (int i = 0; i<count_relevantes; i++){	// para cada blob
@@ -33,11 +52,11 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 		// retira a sample do blob e converte BGR->RGB
  		IVC *sample = vc_image_new(sample_width, sample_height, 3, image->levels);
 		retirar_blob_RGB(image,sample,current_blob);
-		vc_write_image("sampleRGB.ppm", sample);
+			//vc_write_image("sampleRGB.ppm", sample);
 
 		// converte sample para HSV
 		vc_rgb_to_hsv(sample);  // hue toma o valor de 0 a 255 e não de 0 a 360
-		vc_write_image("sampleHSV.ppm", sample);
+			//vc_write_image("sampleHSV.ppm", sample);
 
 		// identificar a cor das 3 posições e guardar na memoria de cores
 		cor_seccao(sample, cores_memoria);
@@ -46,19 +65,12 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 	return 1;
 }
 
-bool analisar_cores_memoria(cores_memoria){
+int cor_seccao(IVC *sample, int *cores_memoria){
 
-	// analisar sequencia de cores
-	return true;
-}
-
-
-int cor_seccao(IVC *sample, int cores_memoria){
-
-	int banda1_ini = 0.12 * sample->width;  //0.12
-	int banda1_fin = 0.15 * sample->width;	//0.13
-	int banda2_ini = 0.31 * sample->width;
-	int banda2_fin = 0.37 * sample->width;
+	int banda1_ini = 0.12 * sample->width;
+	int banda1_fin = 0.15 * sample->width;		// banda 1 a funcionar para todos
+	int banda2_ini = 0.39 * sample->width;
+	int banda2_fin = 0.41 * sample->width;
 	int banda3_ini = 0.53 * sample->width;
 	int banda3_fin = 0.58 * sample->width;
 
@@ -80,7 +92,7 @@ int cor_seccao(IVC *sample, int cores_memoria){
 	int contar_pixeis = 0;
 
 	// 1a banda / seccao ---------------------------------------
- 	for( int y = 0 ; y < sample->height ; y++){
+/*  	for( int y = 0 ; y < sample->height ; y++){
 		for ( int x = banda1_ini*3 ; x < banda1_fin*3; x=x+3){
 			pos = x + y * sample->bytesperline;
 			hue_total += sample->data[pos] *360.0 / 255.0;
@@ -99,8 +111,8 @@ int cor_seccao(IVC *sample, int cores_memoria){
 	if (cor_1 != 99999 ){	// se obtiver uma cor válida, guarda na memoria
 			cores_memoria[0] = cor_1;
 	}
+ */
 
-/*
 	// 2a banda / seccao ---------------------------------------
 	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
  	for( int y = 0 ; y < sample->height ; y++){
@@ -125,7 +137,7 @@ int cor_seccao(IVC *sample, int cores_memoria){
 	}
 
 	// 3a banda / seccao ---------------------------------------
- 	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
+/*  	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
  	for( int y = 0 ; y < sample->height ; y++){
 		for ( int x = banda3_ini*3; x < banda3_fin*3; x=x+3){
 		
@@ -146,7 +158,7 @@ int cor_seccao(IVC *sample, int cores_memoria){
 	if (cor_3 != 0 && cor_3 != 0 != 99999 ){
 			cores_memoria[0] = cor_3;
 	}
-  */
+ */
 	return 1;
 }
 
@@ -160,8 +172,8 @@ int cor_identificar(int hue, int sat, int val){
 	int green_hue_min = 70, 	green_sat_min = 97 , 		green_val_min = 109;
 	int green_hue_max = 111, 	green_sat_max = 129 , 		green_val_max = 184;
 
-	int blue_hue_min = 	111,	blue_sat_min = 0 , 			blue_val_min = 0;
-	int blue_hue_max = 	140, 	blue_sat_max = 255 , 		blue_val_max = 255;
+	int blue_hue_min = 	184,		blue_sat_min = 0 , 			blue_val_min = 0;
+	int blue_hue_max = 	205, 	blue_sat_max = 255 , 		blue_val_max = 255;
 
 	int red1_hue_min =	0,		red1_sat_min = 155 ,		red1_val_min = 178 ;
 	int red1_hue_max = 	30, 	red1_sat_max = 167 , 		red1_val_max = 187;
@@ -176,29 +188,29 @@ int cor_identificar(int hue, int sat, int val){
 	int orange_hue_max = 45, 	orange_sat_max = 255 , 		orange_val_max = 255;
 
 	int black_hue_min = 0,		black_sat_min = 0 , 		black_val_min = 0;
-	int black_hue_max = 360, 	black_sat_max = 255 , 		black_val_max = 255; // isto distingue o preto
+	int black_hue_max = 45, 	black_sat_max = 95 , 		black_val_max = 255; // isto distingue o preto
  
-	if(hue>red1_hue_min && hue<red1_hue_max && sat >red1_sat_min && sat<red1_sat_max){
+ 	if (hue>black_hue_min && hue<black_hue_max && sat >black_sat_min && sat<black_sat_max && val<black_val_max){
 		color = 1;
 	}
- 	else if (hue>red2_hue_min && hue<red2_hue_max && sat >red2_sat_min && sat<red2_sat_max){
-		color = 1;
-	}
- 	else if (hue>brown_hue_min && hue<brown_hue_max && sat >brown_sat_min && sat<brown_sat_max){
+	else if(hue>red1_hue_min && hue<red1_hue_max && sat >red1_sat_min && sat<red1_sat_max){
 		color = 2;
 	}
-/*	else if (hue>orange_hue_min && hue<orange_hue_max && sat >orange_sat_min && sat<orange_sat_max){
-		color = 3;
-	} */
-	else if (hue>green_hue_min && hue<green_hue_max && sat >green_sat_min && sat<green_sat_max){
-		color = 4;
- 	}
-/*  else if (hue>blue_hue_min && hue<blue_hue_max && sat >blue_sat_min && sat<blue_sat_max){
-		color = 5;
+ 	else if (hue>red2_hue_min && hue<red2_hue_max && sat >red2_sat_min && sat<red2_sat_max){
+		color = 2;
 	}
-	else if (hue>black_hue_min && hue<black_hue_max && sat >black_sat_min && sat<black_sat_max && val<black_val_max){
+ 	else if (hue>brown_hue_min && hue<brown_hue_max && sat >brown_sat_min && sat<brown_sat_max){
+		color = 3;
+	}
+	else if (hue>orange_hue_min && hue<orange_hue_max && sat >orange_sat_min && sat<orange_sat_max){
+		color = 4;
+	}
+	else if (hue>green_hue_min && hue<green_hue_max && sat >green_sat_min && sat<green_sat_max){
+		color = 5;
+ 	}
+    else if (hue>blue_hue_min && hue<blue_hue_max && sat >blue_sat_min && sat<blue_sat_max){
 		color = 6;
-	} */
+	}
 	else{
 		color= 99999;
 	}

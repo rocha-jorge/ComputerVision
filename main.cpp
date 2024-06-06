@@ -178,7 +178,7 @@ int main(void) {
 
 		// DETERMINAR RESISTENCIA
 			bool resistencia = analisar_cores_memoria(cores_memoria);
-			if(resistencia == true || limite_frames_identificao == 50){ // se definir resist com sucesso ou se passarem x frames, reinicia a memória de cores
+			if(resistencia == true || limite_frames_identificao == 80){ // se definir resist com sucesso ou se passarem x frames, reinicia a memória de cores
 				for (int i = 0; i < 3; i++) {
    					cores_memoria[i] = 0;
 				}
@@ -193,21 +193,6 @@ int main(void) {
 			draw_box(array_blobs_relevantes, image, count_relevantes);
 		}
 
-			// resistencias no video
-			// 1. Verde 	Azul 		Vermelho 	Dourado   	5 6 *100	 5600
-			// 2. Vermelho 	Vermelho 	Castanho 	Dourado		2 2 *10		  220
-			// 3. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
-			// 4. Vermelho	Vermelho	Vermelho	Dourado		2 2 *100	 2200
-			// 5. Castanho	Preto		Laranja		Dourado		1 0 *1000	10000
-			// 6. Castanho	Preto		Vermelho	Dourado		1 0 *100	 1000
-
-			// Verde 	= B ?:? , G ?:? , R ?:?
-			// Azul  	= B ?:? , G ?:? , R ?:?
-			// Vermelho = B ?:? , G ?:? , R ?:?
-			// Castanho = B ?:? , G ?:? , R ?:?
-			// Preto 	= B ?:? , G ?:? , R ?:?
-			// Laranja 	= B ?:? , G ?:? , R ?:?
-			// Dourado  = "Os grupos podem considerar que todas as resistências possuem uma tolerância de ±5%" pelo que não é necessário avaliar
 
 	// GERAR FRAME
 
