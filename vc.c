@@ -92,7 +92,7 @@ int cor_seccao(IVC *sample, int *cores_memoria){
 	int contar_pixeis = 0;
 
 	// 1a banda / seccao ---------------------------------------
-/*  	for( int y = 0 ; y < sample->height ; y++){
+  	for( int y = 0 ; y < sample->height ; y++){
 		for ( int x = banda1_ini*3 ; x < banda1_fin*3; x=x+3){
 			pos = x + y * sample->bytesperline;
 			hue_total += sample->data[pos] *360.0 / 255.0;
@@ -111,8 +111,8 @@ int cor_seccao(IVC *sample, int *cores_memoria){
 	if (cor_1 != 99999 ){	// se obtiver uma cor válida, guarda na memoria
 			cores_memoria[0] = cor_1;
 	}
- */
 
+/* 
 	// 2a banda / seccao ---------------------------------------
 	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
  	for( int y = 0 ; y < sample->height ; y++){
@@ -135,7 +135,7 @@ int cor_seccao(IVC *sample, int *cores_memoria){
 	if (cor_2 != 0 && cor_2 != 0 != 99999 ){
 			cores_memoria[0] = cor_2;
 	}
-
+ */
 	// 3a banda / seccao ---------------------------------------
 /*  	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
  	for( int y = 0 ; y < sample->height ; y++){
@@ -169,12 +169,15 @@ int cor_identificar(int hue, int sat, int val){
 
 	// HUE	(0-360)				// SATURATION				// VALUE
 
+	// green band 1 está feito
 	int green_hue_min = 70, 	green_sat_min = 97 , 		green_val_min = 109;
 	int green_hue_max = 111, 	green_sat_max = 129 , 		green_val_max = 184;
 
+	// green band 1 e 2 está feito
 	int blue_hue_min = 	184,		blue_sat_min = 0 , 			blue_val_min = 0;
 	int blue_hue_max = 	205, 	blue_sat_max = 255 , 		blue_val_max = 255;
 
+	// red band 1 e 2 está feito
 	int red1_hue_min =	0,		red1_sat_min = 155 ,		red1_val_min = 178 ;
 	int red1_hue_max = 	30, 	red1_sat_max = 167 , 		red1_val_max = 187;
 
@@ -184,11 +187,11 @@ int cor_identificar(int hue, int sat, int val){
 	int brown_hue_min = 6, 		brown_sat_min = 0 , 		brown_val_min = 0;
 	int brown_hue_max = 19, 	brown_sat_max = 255 , 		brown_val_max = 255;
 
-	int orange_hue_min = 31, 	orange_sat_min = 0 ,		orange_val_min = 0;
+	int orange_hue_min = 31, 	orange_sat_min = 95 ,		orange_val_min = 0;
 	int orange_hue_max = 45, 	orange_sat_max = 255 , 		orange_val_max = 255;
 
 	int black_hue_min = 0,		black_sat_min = 0 , 		black_val_min = 0;
-	int black_hue_max = 45, 	black_sat_max = 95 , 		black_val_max = 255; // isto distingue o preto
+	int black_hue_max = 45, 	black_sat_max = 160 , 		black_val_max = 255; // isto distingue o preto
  
  	if (hue>black_hue_min && hue<black_hue_max && sat >black_sat_min && sat<black_sat_max && val<black_val_max){
 		color = 1;
