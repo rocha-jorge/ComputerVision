@@ -6,6 +6,8 @@
 #include <opencv2\highgui.hpp>
 #include <opencv2\videoio.hpp>
 
+#include <stdbool.h>
+
 extern "C" {
 #include "vc.h"
 }
@@ -28,7 +30,7 @@ void vc_timer(void) {
 		std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(elapsedTime);
 		double nseconds = time_span.count();
 
-		std::cout << "Tempo decorrido: " << nseconds << "segundos" << std::endl;
+		std::cout << "\nTempo decorrido: " << nseconds << "segundos" << std::endl;
 		std::cout << "Pressione qualquer tecla para continuar...\n";
 		std::cin.get();
 	}
@@ -82,6 +84,10 @@ int main(void) {
 
 	/* Inicia o timer */
 	vc_timer();
+
+	// ARRAY DE MEMORIA DE CORES
+	int cores_memoria[3] = {0, 0, 0};
+	int limite_frames_identificao = 0;
 
 	cv::Mat frame;
 	while (key != 'q' /*&& video.nframe <= 650*/) {
@@ -142,7 +148,7 @@ int main(void) {
 		OVC* array_blobs = vc_binary_blob_labelling(sem_fundo_bin, grey_labels, &nlabels);
 		vc_image_free(sem_fundo_bin);
 
-	// FILTRAR LABELS
+		// FILTRAR LABELS
 
 		int count_relevantes = 0;
 		OVC *array_blobs_relevantes = 0;
@@ -164,12 +170,26 @@ int main(void) {
 			ajustar_blobs(array_blobs_relevantes, count_relevantes);
 		}
 
+		// DETERMINAR CORES
 		if (count_relevantes>0){   // se algum blob parecer ser uma resistência relevante
 
-			// analisar qual a resistência de cada blob
-			analisar_blobs(array_blobs_relevantes, count_relevantes,image);
+			// analisar as cores de cada blob e gravar no cores_memoria
+			analisar_blobs(array_blobs_relevantes, count_relevantes,image, cores_memoria);
 
-			// desenhar blobs relevantes
+		// DETERMINAR RESISTENCIA
+			bool resistencia = analisar_cores_memoria(cores_memoria);
+			if(resistencia == true || limite_frames_identificao == 50){ // se definir resist com sucesso ou se passarem x frames, reinicia a memória de cores
+				for (int i = 0; i < 3; i++) {
+   					cores_memoria[i] = 0;
+				}
+				limite_frames_identificao = 0;
+			}
+			else{
+				// incrementar contador de "timeout" ou, neste caso "frameout" caso não identifique a resist em x frames
+				limite_frames_identificao++;
+			}
+
+		// desenhar blobs relevantes
 			draw_box(array_blobs_relevantes, image, count_relevantes);
 		}
 

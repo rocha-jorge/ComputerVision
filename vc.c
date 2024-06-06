@@ -16,17 +16,19 @@
 #include <malloc.h>
 #include <math.h>
 #include "vc.h"
+
+#include <stdbool.h>
+
 #define MY_MAX(a, b ) (a > b ? a : b)
 
-int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image){
+int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image, int *cores_memoria){
 
 	for (int i = 0; i<count_relevantes; i++){	// para cada blob
 		OVC *current_blob = &array_blobs_relevantes[i];
 
 		// definir tamanho da sample a tirar do blob
 		int sample_width = current_blob->width;
-		int sample_height = 5;
-
+		int sample_height = 4;
 
 		// retira a sample do blob e converte BGR->RGB
  		IVC *sample = vc_image_new(sample_width, sample_height, 3, image->levels);
@@ -34,72 +36,42 @@ int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *imag
 		vc_write_image("sampleRGB.ppm", sample);
 
 		// converte sample para HSV
-		rgb_to_hsv(sample);  // hue toma o valor de 0 a 255 e não de 0 a 360
+		vc_rgb_to_hsv(sample);  // hue toma o valor de 0 a 255 e não de 0 a 360
 		vc_write_image("sampleHSV.ppm", sample);
 
-
-		// guardar a cor das 3 posicoes
-		int bandas[3] = {0,0,0};
-
-		// identificar a cor das 3 posições
-		//cor_seccao(sample, &bandas);
-
-
-
-		// imagem para guardar segmentações
-/* 		IVC *segmented = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
-		// imagem para guardar labels
-		IVC *labels = vc_image_new(current_blob->width, current_blob->height, 3, image->levels);
-		// variáveis HSV
-		int hmin, hmax, smin, smax, vmin, vmax; */
-
-/* 		// segmentar VERDE
-		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
-		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
-			// aplicar blobs de verde . a imagem de vc_hsv_segmentation já é binária
-		int *nlabels = 0;
-		OVC* blobs_verdes = vc_binary_blob_labelling(segmented, labels, nlabels);
-		vc_binary_blob_info(labels,blobs_verdes,&nlabels);
-		
-		// segmentar AZUL
-		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
-		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
-			// aplicar blobs de azul . a imagem de vc_hsv_segmentation já é binária
-		nlabels = 0;
-		OVC* blobs_azul = vc_binary_blob_labelling(segmented, &labels, nlabels);
-		vc_binary_blob_info(labels,blobs_azul,&nlabels);
-
-		// segmentar VERMELHO
-		hmin=0 ; hmax=0	; smin=0 ;  smax=0 ; vmin=0;  vmax=0;
-		vc_hsv_segmentation_output(sample, segmented, hmin, hmax, smin, smax, vmin, vmax);
-		// aplicar blobs de vermelho . a imagem de vc_hsv_segmentation já é binária
-		nlabels = 0;
-		OVC* blobs_vermelho = vc_binary_blob_labelling(segmented, labels, &nlabels);
-		vc_binary_blob_info(labels,blobs_vermelho,nlabels); */
+		// identificar a cor das 3 posições e guardar na memoria de cores
+		cor_seccao(sample, cores_memoria);
 
 	}
 	return 1;
 }
 
-int cor_seccao(IVC *sample, int*bandas){
+bool analisar_cores_memoria(cores_memoria){
 
-	// seccoes
-	int banda1_ini = 14/100 * sample->width;
-	int banda1_fin = 21/100 * sample->width;
-	int banda2_ini = 38/100 * sample->width;
-	int banda2_fin = 47/100 * sample->width;
-	int banda3_ini = 63/100 * sample->width;
-	int banda3_fin = 71/100 * sample->width;
+	// analisar sequencia de cores
+	return true;
+}
+
+
+int cor_seccao(IVC *sample, int cores_memoria){
+
+	int banda1_ini = 0.12 * sample->width;  //0.12
+	int banda1_fin = 0.15 * sample->width;	//0.13
+	int banda2_ini = 0.31 * sample->width;
+	int banda2_fin = 0.37 * sample->width;
+	int banda3_ini = 0.53 * sample->width;
+	int banda3_fin = 0.58 * sample->width;
 
 	int y_ini = 0;
 	int y_fin = sample->height;
+
 
 	// somatorios
 	float hue_total, sat_total, val_total;
 	hue_total = sat_total = val_total = 0 ;
 
 	// secção
-	float hue, sat, val;
+	int hue, sat, val;
 	hue = sat = val = 0 ;
 	int cor_id = 0;
 
@@ -107,14 +79,37 @@ int cor_seccao(IVC *sample, int*bandas){
 	int pos = 0;
 	int contar_pixeis = 0;
 
-	// 1a banda / seccao
-	for ( int x = banda1_ini ; x < banda1_fin; x=x+3){
-		for( int y = 0 ; y < sample->width ; y++){
-		
+	// 1a banda / seccao ---------------------------------------
+ 	for( int y = 0 ; y < sample->height ; y++){
+		for ( int x = banda1_ini*3 ; x < banda1_fin*3; x=x+3){
 			pos = x + y * sample->bytesperline;
-			hue_total += sample->data[pos];
+			hue_total += sample->data[pos] *360.0 / 255.0;
 			sat_total += sample->data[pos+1];
 			val_total += sample->data[pos+2];
+
+			contar_pixeis++;
+		}
+	}
+
+	hue = (int)hue_total / contar_pixeis;  // de 0 a 360
+	sat = (int)sat_total / contar_pixeis;
+	val = (int)val_total / contar_pixeis;
+
+	int cor_1 = cor_identificar(hue, sat, val);
+	if (cor_1 != 99999 ){	// se obtiver uma cor válida, guarda na memoria
+			cores_memoria[0] = cor_1;
+	}
+
+/*
+	// 2a banda / seccao ---------------------------------------
+	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
+ 	for( int y = 0 ; y < sample->height ; y++){
+		for ( int x = banda2_ini*3 ; x < banda2_fin*3; x=x+3){
+		
+			pos = x + y * sample->bytesperline;
+			hue_total += sample->data[pos] *360.0 / 255.0;
+			sat_total += sample->data[pos+1] *360.0 / 255.0;
+			val_total += sample->data[pos+2] *360.0 / 255.0;
 
 			contar_pixeis++;
 		}
@@ -124,53 +119,93 @@ int cor_seccao(IVC *sample, int*bandas){
 	sat = sat_total / contar_pixeis;
 	val = val_total / contar_pixeis;
 
-	bandas[0] = cor_identificar(hue, sat, val);
+	int cor_2 = cor_identificar(hue, sat, val);
+	if (cor_2 != 0 && cor_2 != 0 != 99999 ){
+			cores_memoria[0] = cor_2;
+	}
 
-	// 2a banda / seccao
-
-	//hue = sat = val = hue_total = sat_total = val_total = 0;
-/* 	for ( int x = banda2_ini ; x < banda2_fin; x=x+3){
-		for( int y = 0 ; y < sample->width ; y++){
+	// 3a banda / seccao ---------------------------------------
+ 	hue = sat = val = hue_total = sat_total = val_total = 0;  // reiniciar contagem para reutilizar variáveis
+ 	for( int y = 0 ; y < sample->height ; y++){
+		for ( int x = banda3_ini*3; x < banda3_fin*3; x=x+3){
 		
 			pos = x + y * sample->bytesperline;
-			hue_total += sample->data[pos];
-			sat_total += sample->data[pos+1];
-			val_total += sample->data[pos+2];
+			hue_total += sample->data[pos] *360.0 / 255.0;
+			sat_total += sample->data[pos+1] *360.0 / 255.0;
+			val_total += sample->data[pos+2] *360.0 / 255.0;
 
 			contar_pixeis++;
 		}
 	}
 
-	hue_seccao = hue_total / contar_pixeis;
-	sat_seccao = sat_total / contar_pixeis;
-	val_seccao = val_total / contar_pixeis;
+	hue = (int)hue_total / contar_pixeis; // de 0 a 360
+	sat = (int)sat_total / contar_pixeis;
+	val = (int)val_total / contar_pixeis;
 
-	bandas[1] = cor_identificar(hue_seccao, sat_seccao, val_seccao); */
-
+	int cor_3 = cor_identificar(hue, sat, val);
+	if (cor_3 != 0 && cor_3 != 0 != 99999 ){
+			cores_memoria[0] = cor_3;
+	}
+  */
 	return 1;
 }
 
-int cor_identificar(float hue, float sat, float val){
+// nesta funçao os valores de hue já entram em 0-360
+int cor_identificar(int hue, int sat, int val){
 
-	int red_hue_min = 181 , red_sat_min = 122 ,	red_val_min = 81;
-	int red_hue_max = 190 , red_sat_max = 128 , red_val_max = 93;
+	int color = 0;
 
-	int blue_hue_min = 318 , blue_sat_min = 2 , blue_val_min = 3;
-	int blue_hue_max = 360 , blue_sat_max = 2 , blue_val_max = 3;
+	// HUE	(0-360)				// SATURATION				// VALUE
 
-	int green_hue_min = 174 , green_sat_min = 77 , green_val_min = 102;
-	int green_hue_max = 185 , green_sat_max = 120 , green_val_max = 115;
+	int green_hue_min = 70, 	green_sat_min = 97 , 		green_val_min = 109;
+	int green_hue_max = 111, 	green_sat_max = 129 , 		green_val_max = 184;
 
-	int orange_hue_min = 1 , orange_sat_min = 2 , orange_val_min = 3;
-	int orange_hue_max = 1 , orange_sat_max = 2 , orange_val_max = 3;
+	int blue_hue_min = 	111,	blue_sat_min = 0 , 			blue_val_min = 0;
+	int blue_hue_max = 	140, 	blue_sat_max = 255 , 		blue_val_max = 255;
 
-	int brown_hue_min = 172 , brown_sat_min = 108 , brown_val_min = 48;
-	int brown_hue_max = 190 , brown_sat_max = 117 , brown_val_max = 59;
+	int red1_hue_min =	0,		red1_sat_min = 155 ,		red1_val_min = 178 ;
+	int red1_hue_max = 	30, 	red1_sat_max = 167 , 		red1_val_max = 187;
 
-	int black_hue_min = 1 , black_sat_min = 2 , black_val_min = 3;
-	int black_hue_max = 1 , black_sat_max = 2 , black_val_max = 3;
+	int red2_hue_min =	237,	red2_sat_min = 155,			red2_val_min = 178 ;
+	int red2_hue_max = 	360, 	red2_sat_max = 167 , 		red2_val_max = 187;
+ 
+	int brown_hue_min = 6, 		brown_sat_min = 0 , 		brown_val_min = 0;
+	int brown_hue_max = 19, 	brown_sat_max = 255 , 		brown_val_max = 255;
 
-return 1;
+	int orange_hue_min = 31, 	orange_sat_min = 0 ,		orange_val_min = 0;
+	int orange_hue_max = 45, 	orange_sat_max = 255 , 		orange_val_max = 255;
+
+	int black_hue_min = 0,		black_sat_min = 0 , 		black_val_min = 0;
+	int black_hue_max = 360, 	black_sat_max = 255 , 		black_val_max = 255; // isto distingue o preto
+ 
+	if(hue>red1_hue_min && hue<red1_hue_max && sat >red1_sat_min && sat<red1_sat_max){
+		color = 1;
+	}
+ 	else if (hue>red2_hue_min && hue<red2_hue_max && sat >red2_sat_min && sat<red2_sat_max){
+		color = 1;
+	}
+ 	else if (hue>brown_hue_min && hue<brown_hue_max && sat >brown_sat_min && sat<brown_sat_max){
+		color = 2;
+	}
+/*	else if (hue>orange_hue_min && hue<orange_hue_max && sat >orange_sat_min && sat<orange_sat_max){
+		color = 3;
+	} */
+	else if (hue>green_hue_min && hue<green_hue_max && sat >green_sat_min && sat<green_sat_max){
+		color = 4;
+ 	}
+/*  else if (hue>blue_hue_min && hue<blue_hue_max && sat >blue_sat_min && sat<blue_sat_max){
+		color = 5;
+	}
+	else if (hue>black_hue_min && hue<black_hue_max && sat >black_sat_min && sat<black_sat_max && val<black_val_max){
+		color = 6;
+	} */
+	else{
+		color= 99999;
+	}
+
+	printf("\n \t Hue(0-360): %d   \t Sat: %d   \t Value: %d   \t Color: %d", hue , sat, val, color);
+
+return color;
 }
 
 int retirar_blob_RGB(IVC *image, IVC *sample, OVC *blob  ){
@@ -277,8 +312,8 @@ int draw_box(OVC * blobs_relevantes, IVC *image, int count_relevantes){
 		// desenhar box
 		for (int y=0; y<height; y++){
 			for (int x=0; x<bytesperline; x=x+channels){
-				if( ((y == y_ini-1 || y == y_fin) && x >= x_ini-1 && x <= x_fin ) ||
-					((x == x_ini-1 || x == x_fin) && y >= y_ini-1 && y <= y_fin ) ) {				
+				if( ((y == y_ini || y == y_fin) && x >= x_ini && x <= x_fin ) ||
+					((x == x_ini || x == x_fin) && y >= y_ini && y <= y_fin ) ) {				
 					pos = x + bytesperline * y;
 					image->data[pos] = 0;
 					image->data[pos+1] = 0;
@@ -2096,9 +2131,9 @@ int vc_rgb_to_hsv(IVC *srcdst)
         data[i] = (unsigned char)(hue / 360.0f * 255.0f);
         data[i + 1] = (unsigned char)(saturation);
         data[i + 2] = (unsigned char)(value);
-        
+    
     }
-	return 1;
+	return 0;
 }
 
 int vc_rgb_to_gray(IVC *src, IVC *dst){

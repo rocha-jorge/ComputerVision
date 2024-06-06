@@ -56,10 +56,13 @@ int eliminar_cabos(IVC *sem_fundo_bin, int n_min_pixeis_vertical);
 int draw_box(OVC *array_blobs_relevantes, IVC *image, int count_relevantes);
 OVC* filter_blobs (OVC *array_blobs, int nlabels, int *count_relevantes, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max);
 int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes);
-int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image);
+int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image, int *cores_memoria);
 int copiar_frame_nova_imagem(IVC *image, IVC *frame, OVC *blob  );
 int retirar_blob_RGB(IVC *image,IVC *sample,OVC *current_blob);
 int vc_rgb_to_hsv(IVC *srcdst);
+int cor_identificar(int hue, int sat, int val);
+int cor_seccao(IVC *sample, int *cores_memoria);
+bool analisar_cores_memoria(int *cores_memoria);
 
 
 // FUN��ES: ALOCAR E LIBERTAR UMA IMAGEM
