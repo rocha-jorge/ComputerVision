@@ -1,8 +1,8 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//           INSTITUTO POLIT�CNICO DO C�VADO E DO AVE
+//           INSTITUTO POLITECNICO DO CAVADO E DO AVE
 //                          2022/2023
-//             ENGENHARIA DE SISTEMAS INFORM�TICOS
-//                    VIS�O POR COMPUTADOR
+//             ENGENHARIA DE SISTEMAS INFORMATICOS
+//                    VISAO POR COMPUTADOR
 //
 //             [  DUARTE DUQUE - dduque@ipca.pt  ]
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -12,7 +12,6 @@
 #define VC_H
 
 #include <stdbool.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,46 +32,51 @@ typedef struct {
 typedef struct {
 	unsigned char *data;
 	int width, height;
-	int channels;			// Bin�rio/Cinzentos=1; RGB=3
-	int levels;				// Bin�rio=1; Cinzentos [1,255]; RGB [1,255]
+	int channels;			// Binario/Cinzentos=1; RGB=3
+	int levels;				// Binario=1; Cinzentos [1,255]; RGB [1,255]
 	int bytesperline;		// width * channels
 } IVC;
 
-typedef struct Zona {
-	int x_inicial;
-	int x_final;
-	int y_inicial;
-	int y_final;
-} Zona;
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//                    PROT�TIPOS DE FUN��ES
+//                    PROTOTIPOS DE FUNCOES
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-// TRABALHO VCWORK TP
-
-int vc_red_line(IVC *frame, int line);
+// DESENHAR
 int mostrar_zona_analise(IVC *image, float lateral_cutoff, float header_cutoff, float footer_cutoff);
+
 int binarizar_1ch_8bpp(IVC *image, IVC *sem_fundo_bin, int int_fundo);
-int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_cutoff, float footer_cutoff );
-int eliminar_cabos(IVC *sem_fundo_bin, int n_min_pixeis_vertical);
 int draw_box(OVC *array_blobs_relevantes, IVC *image, int count_relevantes);
+
+// BINARIZAR
+
+int apagar_fora_de_zona(IVC *sem_fundo_bin, float lateral_cutoff, float header_cutoff, float footer_cutoff );
+
+// BLOBS
+int vc_binary_blob_info(IVC *src, OVC *blobs, int nblobs);
+OVC* vc_binary_blob_labelling(IVC *src, IVC *dst, int *nlabels);
 OVC* filter_blobs (OVC *array_blobs, int nlabels, int *count_relevantes, int area_min, int area_max, int altura_min, int altura_max, int largura_min, int largura_max);
 int ajustar_blobs(OVC *array_blobs_relevantes, int count_relevantes);
-int analisar_blobs (OVC *array_blobs_relevantes, int count_relevantes, IVC *image, int *cores_memoria);
+
+// RESISTENCIAS
 int copiar_frame_nova_imagem(IVC *image, IVC *frame, OVC *blob  );
-int retirar_blob_RGB(IVC *image,IVC *sample,OVC *current_blob);
-int vc_rgb_to_hsv(IVC *srcdst);
-int cor_identificar(int hue, int sat, int val);
+	int retirar_blob_RGB(IVC *image,IVC *sample,OVC *current_blob);
+	int vc_rgb_to_hsv (IVC *sample);
+int analisar_resistencias (OVC *array_blobs_relevantes, int count_relevantes, IVC *image, int *cores_memoria);
+
+// CORES
 int cor_seccao(IVC *sample, int *cores_memoria);
-bool analisar_cores_memoria(int *cores_memoria);
+int cor_identificar_banda1(int hue, int sat, int val);
+int cor_identificar_banda2(int hue, int sat, int val);
+int cor_identificar_banda3(int hue, int sat, int val);
+bool analisar_cores_memoria(int *cores_memoria, int *contar_220, int *contar_1000, int *contar_2200, int *contar_5600, int *contar_10000);
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-// FUN��ES: ALOCAR E LIBERTAR UMA IMAGEM
+// FUNCOES: ALOCAR E LIBERTAR UMA IMAGEM
 IVC *vc_image_new(int width, int height, int channels, int levels);
 IVC *vc_image_free(IVC *image);
 
-// FUN��ES: LEITURA E ESCRITA DE IMAGENS (PBM, PGM E PPM)
+// FUNCOES: LEITURA E ESCRITA DE IMAGENS (PBM, PGM E PPM)
 IVC *vc_read_image(char *filename);
 int vc_write_image(char *filename, IVC *image);
 
@@ -80,60 +84,6 @@ int vc_write_image(char *filename, IVC *image);
 void bit_to_unsigned_char(unsigned char *databit, unsigned char *datauchar, int width, int height);
 long int unsigned_char_to_bit(unsigned char *datauchar, unsigned char *databit, int width, int height);
 char *netpbm_get_token(FILE *file, char *tok, int len);
-
-// FUNCOES DE INVERSAO
-int vc_gray_negative(IVC *src, IVC *dst);
-int vc_rgb_negative(IVC *src, IVC *dst);
-
-// FUNÇOES CONVERSAO
-int vc_rgb_get_red_gray(IVC *src, IVC *dst);
-int vc_rgb_get_green_gray(IVC *src, IVC *dst);
-int vc_rgb_to_gray(IVC *src, IVC *dst);
-int vc_rgb_to_hsv2 (IVC *src, IVC *dst);
-
-// SEGMENTACAO
-int vc_hsv_segmentation(IVC *srcdst, int hmin, int hmax, int smin, int smax, int vmin, int vmax);
-int vc_hsv_segmentation_output(IVC *PETNormal, IVC *VC_gray, int, int, int, int, int, int);
-int countWhitePixels(IVC *srcdst);
-int vc_gray_to_binary_midpoint(IVC *src, IVC *dst, int kernel);
-int vc_scale_gray_to_rgb(IVC *src, IVC *dst);
-int vc_gray_to_binary(IVC *srcdst, IVC *dst, int threshold);
-float vc_gray_to_binary_global_mean(IVC *srcdst);
-int vc_gray_to_binary_midpoint(IVC *src, IVC *dst, int kernel);
-int vc_gray_to_binary_Bernsen(IVC *src, IVC *dst, int kernel);
-int vc_gray_to_binary_niblack(IVC* src, IVC* dst, int kernel, float k);
-
-// OPERADORES MORFOLOGICOS
-int vc_binary_dilate(IVC* src, IVC* dst, int kernel);
-int vc_binary_erode(IVC* src, IVC* dst, int kernel);
-int vc_binary_open(IVC *src, IVC *dst, int kernelE, int kernelD);
-int vc_binary_close(IVC *src, IVC *dst, int kernelE, int kernelD);
-
-int vc_gray_dilate(IVC *src, IVC *dst, int kernel);
-int vc_gray_erode(IVC *src, IVC *dst, int kernel);
-int vc_gray_close(IVC *src, IVC *dst, int kernelE, int kernelD);
-int vc_gray_open(IVC *src, IVC *dst, int kernelE, int kernelD);
-
-// ETIQUETAGEM
-int vc_binary_blob_info(IVC *src, OVC *blobs, int nblobs);
-OVC* vc_binary_blob_labelling(IVC *src, IVC *dst, int *nlabels);
-int vc_labeled_to_grey(IVC* imageA_labelled, IVC* imageA_label_grey, int nlabels, int width, int height);
-
-// HISTOGRAM
-int vc_gray_histogram_show(IVC *src, IVC *dst);
-int vc_gray_histogram_equalization(IVC *src, IVC *dst);
-
-// DETEÇÃO DE CONTORNOS
-int vc_grey_edge_prewitt(IVC *image_original, IVC *barbara_contornos, float th);
-
-// FILTROS DOMINIO ESPACIAL
-int vc_gray_lowpass_mean_filter(IVC *src, IVC *dst, int kernel );
-int vc_gray_lowpass_median_filter(IVC *src, IVC *dst, int kernel);
-int vc_gray_lowpass_gaussian_filter(IVC *src, IVC *dst);
-int vc_gray_highpass_filter(IVC *src, IVC *dst);
-int vc_gray_highpass_filter_enhance(IVC *src, IVC *dst, int gain);
-
-
 
 #ifdef __cplusplus
 }
