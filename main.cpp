@@ -255,7 +255,7 @@ int main(void) {
 		/* Exibe a frame */
 		cv::imshow("VC - VIDEO", frame);
 
-		// Espera 1 milissegundo entre frames. isto permite uma performance muito superior ao waitkey (q)
+		// Sai da aplicacao se utilizador premir q mas permite concluir o video em 1/3 do tempo do que o codigo key = cv::waitKey('q');
     	key = cv::waitKey(1);
 
 		/* Sai da aplicacao, se o utilizador premir a tecla 'q' */
