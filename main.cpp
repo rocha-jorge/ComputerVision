@@ -55,7 +55,7 @@ int main(void) {
 	/* Verifica se foi possivel abrir o ficheiro de video */
 	if (!capture.isOpened())
 	{
-		std::cerr << "Erro ao abrir o ficheiro de v�deo!\n";
+		std::cerr << "Erro ao abrir o ficheiro de video!\n";
 		return 1;
 	}
 
@@ -255,8 +255,12 @@ int main(void) {
 		/* Exibe a frame */
 		cv::imshow("VC - VIDEO", frame);
 
+		// Espera 1 milissegundo entre frames. isto permite uma performance muito superior ao waitkey (q)
+    	key = cv::waitKey(1);
+
 		/* Sai da aplicacao, se o utilizador premir a tecla 'q' */
-		key = cv::waitKey('q');
+		//key = cv::waitKey('q');
+
 	}
 
 	/* Para o timer e exibe o tempo decorrido */
